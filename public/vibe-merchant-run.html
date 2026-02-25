@@ -1,0 +1,3339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Vibe Merchant Run - Friday Night Lights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+            /* iOS Safari specific fixes */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            font-family: 'Oswald', sans-serif;
+            background: #0a0a1f;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            /* iOS Safari viewport height fix */
+            height: 100vh;
+            height: -webkit-fill-available;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
+            /* Center content on desktop */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gameContainer {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(180deg, #1a0a3e 0%, #0d0520 50%, #1a1a2e 100%);
+            box-shadow: 0 0 100px rgba(138, 43, 226, 0.3);
+            max-width: 100%;
+            max-height: 100vh;
+            /* Prevent iOS touch gestures from interfering */
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Mobile fullscreen canvas */
+        @media (max-width: 768px) {
+            #gameCanvas {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw;
+                max-height: 100vh;
+                margin: 0;
+            }
+        }
+
+        /* Pulsing neon lights overlay */
+        .neon-pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            animation: pulse 2s ease-in-out infinite;
+            background: radial-gradient(circle at 50% 50%, 
+                rgba(255, 0, 255, 0.1) 0%, 
+                rgba(0, 255, 255, 0.05) 50%, 
+                transparent 100%);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Scanlines for retro effect */
+        .scanlines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                transparent 2px,
+                transparent 4px
+            );
+            opacity: 0.3;
+        }
+
+        #score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: #ffffff;
+            text-shadow: 0 0 10px #ffffff;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        #startScreen, #gameOverScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(10, 10, 31, 0.95);
+            z-index: 200;
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        /* Inner content box for screens */
+        #startScreen > *, #gameOverScreen > * {
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        /* Scrollable content wrapper */
+        .screen-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 10px;
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 3s ease infinite, neon-flicker 1.5s infinite;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes neon-flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.95; }
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            padding: 18px 50px;
+            border: 3px solid #ff00ff;
+            background: rgba(255, 0, 255, 0.1);
+            color: #ff00ff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 255, 0.5),
+                inset 0 0 20px rgba(255, 0, 255, 0.2);
+            transition: all 0.3s;
+            touch-action: manipulation;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 0, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 0, 255, 0.3);
+            box-shadow: 
+                0 0 40px rgba(255, 0, 255, 0.8),
+                inset 0 0 40px rgba(255, 0, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        #finalScore {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 96px;
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-shadow: 
+                0 0 20px #00ffff,
+                0 0 40px #00ffff,
+                0 0 60px #ff00ff;
+            letter-spacing: 5px;
+        }
+
+        .instructions {
+            font-size: 16px;
+            color: #999;
+            margin-top: 30px;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* Scoreboard/Leaderboard */
+        .scoreboard-container {
+            background: rgba(10, 10, 31, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
+            max-width: 350px;
+            width: 90%;
+            max-height: 150px;
+            min-height: 80px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .scoreboard-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 6px;
+            text-shadow: 0 0 10px #00ffff;
+            letter-spacing: 2px;
+        }
+
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px; /* Reduced from 10px */
+            margin: 3px 0; /* Reduced from 5px */
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #ff00ff;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .score-entry:nth-child(1) {
+            border-left-color: #ffd700;
+            background: rgba(255, 215, 0, 0.15) !important; /* Gold glow */
+            border: 2px solid #ffd700 !important;
+        }
+
+        .score-entry:nth-child(2) {
+            border-left-color: #c0c0c0;
+            background: rgba(192, 192, 192, 0.15) !important; /* Silver glow */
+            border: 2px solid #c0c0c0 !important;
+        }
+
+        .score-entry:nth-child(3) {
+            border-left-color: #cd7f32;
+            background: rgba(205, 127, 50, 0.15) !important; /* Bronze glow */
+            border: 2px solid #cd7f32 !important;
+        }
+
+        .score-entry .rank {
+            font-family: 'Orbitron', sans-serif;
+            color: #999;
+            font-size: 14px;
+            width: 40px;
+        }
+
+        .score-entry .username {
+            flex: 1;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .score-entry .points {
+            color: #00ffff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        /* Username input */
+        .username-input-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .username-input {
+            font-family: 'Oswald', sans-serif;
+            font-size: 18px;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ff00ff;
+            border-radius: 5px;
+            color: #fff;
+            text-align: center;
+            width: 250px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+            outline: none;
+        }
+
+        .username-input::placeholder {
+            color: #999;
+        }
+
+        .username-input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .submit-score-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            padding: 10px 30px;
+            border: 2px solid #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ffff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            transition: all 0.3s;
+            border-radius: 5px;
+            margin: 0 5px;
+        }
+
+        .submit-score-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+        }
+
+        .error-message {
+            color: #ff0080;
+            font-size: 14px;
+            margin-top: 10px;
+            text-shadow: 0 0 5px #ff0080;
+        }
+
+        .scoreboard-container::-webkit-scrollbar {
+            width: 10px; /* Slightly wider for easier grabbing */
+        }
+
+        .scoreboard-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .scoreboard-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #00FFD1, #00ffff); /* Cyan gradient */
+            border-radius: 10px;
+            box-shadow: 0 0 10px #00FFD1;
+            border: 1px solid #00FFD1;
+        }
+        
+        .scoreboard-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #00ffff, #00FFD1);
+            box-shadow: 0 0 15px #00FFD1;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Desktop styles (min-width ensures these only apply on larger screens) */
+        @media (min-width: 769px) {
+            #startScreen, #gameOverScreen {
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 36px;
+                letter-spacing: 4px;
+                margin-bottom: 8px;
+            }
+            
+            #finalScore {
+                font-size: 56px;
+                margin: 5px 0;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+            
+            .btn {
+                font-size: 14px;
+                padding: 10px 24px;
+            }
+            
+            .scoreboard-container {
+                max-height: 150px;
+                min-height: 100px;
+                padding: 10px;
+            }
+            
+            .scoreboard-title {
+                font-size: 16px;
+                margin-bottom: 6px;
+            }
+            
+            .score-entry {
+                padding: 5px 8px;
+                margin: 3px 0;
+                font-size: 13px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                max-width: 400px;
+            }
+            
+            .modal-title {
+                font-size: 24px;
+            }
+            
+            .modal-text {
+                font-size: 14px;
+            }
+            
+            .modal-btn {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+            
+            /* Desktop start screen */
+            #startScreen .username-input-container {
+                margin: 15px 0 !important;
+            }
+            
+            #startScreen .instructions {
+                font-size: 12px;
+                margin-top: 10px;
+            }
+            
+            /* Desktop game over */
+            #gameOverScreen #personalBestDisplay {
+                font-size: 13px;
+            }
+            
+            #gameOverScreen #statsDisplay {
+                font-size: 11px;
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 24px;
+                letter-spacing: 2px;
+                margin-bottom: 8px;
+            }
+
+            #finalScore {
+                font-size: 48px;
+                margin: 5px 0;
+            }
+            
+            #startScreen .title {
+                font-size: 22px;
+            }
+            
+            #startScreen .subtitle {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            
+            #startScreen .username-input-container {
+                margin: 15px 0 !important;
+            }
+            
+            #startScreen .instructions {
+                font-size: 11px;
+                margin-top: 10px;
+            }
+
+            .fnl-logo {
+                font-size: 20px;
+                letter-spacing: 1.5px;
+            }
+
+            .fnl-logo-box {
+                top: 10px;
+                padding: 10px 20px;
+            }
+
+            #score {
+                font-size: 18px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 10px 25px;
+                margin: 4px 0;
+            }
+
+            .subtitle {
+                font-size: 14px;
+                margin-bottom: 15px;
+            }
+
+            .username-input {
+                width: 180px;
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+
+            .scoreboard-container {
+                max-height: 120px;
+                margin: 8px 0;
+            }
+            
+            .scoreboard-title {
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+
+            /* Mobile screens - compact layout */
+            #startScreen, #gameOverScreen {
+                padding: 10px;
+                justify-content: center;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            #startScreen > *, #gameOverScreen > * {
+                max-width: 95%;
+            }
+            
+            /* Compact game over elements */
+            #gameOverScreen .btn {
+                padding: 6px 12px;
+                font-size: 11px;
+                min-height: 32px;
+            }
+            
+            #gameOverScreen .title {
+                font-size: 28px !important;
+                margin-bottom: 2px !important;
+            }
+            
+            #gameOverScreen #finalScore {
+                font-size: 48px !important;
+                margin: 2px 0 !important;
+            }
+            
+            #gameOverScreen .subtitle {
+                font-size: 12px !important;
+                margin-bottom: 3px !important;
+            }
+            
+            #personalBestDisplay {
+                font-size: 11px !important;
+            }
+            
+            #newRecordDisplay {
+                font-size: 12px !important;
+            }
+            
+            #statsDisplay {
+                font-size: 10px !important;
+            }
+            
+            .scoreboard-container {
+                max-height: 120px !important;
+                min-height: 100px !important;
+                margin: 3px 0 !important;
+                padding: 6px !important;
+            }
+            
+            .scoreboard-title {
+                font-size: 11px !important;
+                margin-bottom: 3px !important;
+            }
+            
+            .score-entry {
+                padding: 3px 6px !important;
+                margin: 1px 0 !important;
+                font-size: 10px !important;
+            }
+
+            .modal-content {
+                padding: 12px;
+                width: 92%;
+                max-width: 320px;
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+
+            .modal-title {
+                font-size: 22px;
+                margin-bottom: 10px;
+            }
+
+            .modal-text {
+                font-size: 13px;
+                margin: 8px 0;
+            }
+            
+            .modal-btn {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+            
+            .promo-box {
+                padding: 10px;
+                margin: 10px 0;
+            }
+            
+            .promo-box p {
+                font-size: 12px;
+            }
+        }
+
+        /* How To Play Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a0a3e 0%, #0d0520 100%);
+            border: 3px solid #00FFD1;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(0, 255, 209, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+            position: relative;
+            z-index: 10001;
+        }
+        
+        /* Mobile modal fixes */
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 12px;
+                max-height: 80vh;
+                overflow-y: auto;
+                overflow-x: hidden;
+                margin: auto;
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+                width: 92%;
+                max-width: 300px;
+            }
+            
+            .modal-title {
+                font-size: 20px !important;
+                margin-bottom: 8px !important;
+            }
+            
+            .modal-text {
+                font-size: 12px !important;
+                margin: 6px 0 !important;
+                line-height: 1.4 !important;
+            }
+            
+            .modal-btn {
+                font-size: 12px !important;
+                padding: 8px 14px !important;
+                min-height: 36px;
+            }
+            
+            .promo-box {
+                padding: 8px !important;
+                margin: 8px 0 !important;
+            }
+            
+            .promo-box p {
+                font-size: 11px !important;
+                line-height: 1.3 !important;
+            }
+            
+            /* Remove scroll indicator on mobile - causes issues */
+            .modal-content::after {
+                display: none;
+            }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            color: #00FFD1;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00FFD1;
+        }
+
+        .modal-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        .modal-text strong {
+            color: #00FFD1;
+        }
+
+        .promo-box {
+            background: rgba(0, 255, 209, 0.1);
+            border: 2px solid #FF006B;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .promo-box p {
+            color: #FFFF00;
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .modal-btn {
+            background: linear-gradient(135deg, #00FFD1 0%, #00a896 100%);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 209, 0.6);
+            transition: all 0.3s;
+            display: block;
+            margin: 20px auto 0;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 255, 209, 0.8);
+        }
+        
+        /* Mobile modal button adjustments */
+        @media (max-width: 768px) {
+            .modal-btn {
+                padding: 10px 20px;
+                font-size: 13px;
+                margin: 10px auto 0;
+            }
+            
+            .modal-title {
+                font-size: 24px;
+                margin-bottom: 10px;
+            }
+            
+            .modal-text {
+                font-size: 12px;
+                margin: 6px 0;
+                line-height: 1.4;
+            }
+            
+            /* Mobile scoreboard adjustments */
+            .scoreboard-container {
+                max-height: 150px;
+                min-height: 80px;
+                padding: 10px;
+                width: 95%;
+            }
+            
+            .scoreboard-title {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            
+            .score-entry {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+
+        /* Lights floating in background */
+        .club-lights {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .light-beam {
+            position: absolute;
+            width: 2px;
+            height: 200px;
+            background: linear-gradient(180deg, 
+                transparent 0%, 
+                rgba(255, 0, 255, 0.3) 50%, 
+                transparent 100%);
+            animation: beam-sweep 4s linear infinite;
+            transform-origin: top center;
+        }
+
+        @keyframes beam-sweep {
+            0% { transform: rotate(-45deg); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: rotate(45deg); opacity: 0; }
+        }
+
+        /* Friday Night Lights Overlay */
+        .friday-lights {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+            overflow: hidden;
+        }
+
+        .stadium-light {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            animation: stadium-pulse 3s ease-in-out infinite;
+        }
+
+        .stadium-light.left {
+            top: -100px;
+            left: -100px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 215, 0, 0.3) 40%, transparent 70%);
+            animation-delay: 0s;
+        }
+
+        .stadium-light.right {
+            top: -100px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 40%, transparent 70%);
+            animation-delay: 1s;
+        }
+
+        .stadium-light.center {
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 30%, transparent 60%);
+            animation-delay: 0.5s;
+            width: 400px;
+            height: 400px;
+        }
+
+        @keyframes stadium-pulse {
+            0%, 100% { 
+                opacity: 0.3;
+                transform: scale(1) translateX(-50%);
+            }
+            50% { 
+                opacity: 0.6;
+                transform: scale(1.1) translateX(-50%);
+            }
+        }
+
+        /* FNL Logo Box */
+        .fnl-logo-box {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: transparent;
+            border: none;
+            padding: 15px 30px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fnl-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 33.6px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 2.4px;
+            line-height: 1.2;
+        }
+
+        .fnl-logo .friday {
+            color: #ffffff;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.8), 0 0 50px rgba(255, 255, 255, 0.5);
+            display: block;
+        }
+
+        .fnl-logo .night {
+            color: #ffffff;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.8), 0 0 50px rgba(255, 255, 255, 0.5);
+            display: block;
+        }
+
+        .fnl-logo .lights {
+            background: linear-gradient(90deg, 
+                #00FFD1 0%, 
+                #00FFD1 20%, 
+                #66FF70 33%,
+                #FFFF00 50%,
+                #FF7F35 67%,
+                #FF006B 80%,
+                #FF006B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            filter: drop-shadow(0 0 20px #00FFD1) drop-shadow(0 0 20px #FFFF00) drop-shadow(0 0 20px #FF006B);
+        }
+
+        /* Light fl
+    </style>
+</head>
+<body>
+    <!-- Neon effects -->
+    <div class="neon-pulse"></div>
+    <div class="scanlines"></div>
+    <div class="club-lights" id="clubLights"></div>
+    
+    <!-- Friday Night Lights Overlay -->
+    <div class="friday-lights">
+        <div class="stadium-light left"></div>
+        <div class="stadium-light center"></div>
+        <div class="stadium-light right"></div>
+    </div>
+
+
+    <!-- Game Canvas -->\n    <div id="gameContainer">
+        <!-- FNL Logo Box with Score -->
+        <div class="fnl-logo-box">
+            <div class="fnl-logo">
+                <span class="friday">FRIDAY</span>
+                <span class="night">NIGHT</span>
+                <span class="lights">LIGHTS</span>
+            </div>
+            <div id="score">0</div>
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- How To Play Modal -->
+    <div id="howToPlayModal" class="modal">
+        <div class="modal-content">
+            <!-- Page 1: Basic Controls -->
+            <div id="howToPlayPage1" style="display: block;">
+                <div class="modal-title">HOW TO PLAY</div>
+                <div class="modal-text">
+                    <strong>Desktop:</strong> SPACE to jump • <strong>Mobile:</strong> TAP to jump
+                </div>
+                <div class="modal-text">
+                    <strong>✨ DOUBLE JUMP:</strong> Press again in mid-air!
+                </div>
+                <div class="modal-text">
+                    Avoid obstacles - game gets harder as you score!
+                </div>
+                <div class="promo-box">
+                    <p><strong>🏆 SCORE 500+?</strong> Share to Instagram, tag <strong>@onrunning</strong> & <strong>@fridaynightlights.run</strong> to win!</p>
+                </div>
+                <button class="modal-btn" onclick="showHowToPlayPage2()" style="margin-top: 10px;">NEXT →</button>
+            </div>
+            
+            <!-- Page 2: Power-Ups -->
+            <div id="howToPlayPage2" style="display: none;">
+                <div class="modal-title">POWER-UPS</div>
+                <div class="modal-text" style="text-align: left; margin: 10px 0; font-size: 12px; line-height: 1.5;">
+                    <div style="margin-bottom: 8px;"><strong style="color: #00FFD1;">🛡 SHIELD</strong> - Protection for 2.5 seconds</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #FFFF00;">⚡ SPEED</strong> - 30% faster for 3 seconds</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #FF006B;">🧲 MAGNET</strong> - Attracts coins for 7 seconds</div>
+                    <div style="margin-bottom: 8px;"><strong style="color: #FFFF00;">💰 COINS</strong> - +10 points each</div>
+                    <div><strong>💡 TIP:</strong> Close calls = <strong>+5 BONUS!</strong></div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button class="modal-btn" onclick="showHowToPlayPage1()" style="flex: 1;">← BACK</button>
+                    <button class="modal-btn" id="letsGoButton" style="flex: 1;">LET'S GO!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden canvas for generating share image -->
+    <canvas id="shareCanvas" style="display: none;" width="1080" height="1920"></canvas>
+
+    <!-- Start Screen -->
+    <div id="startScreen">
+        <div class="title">VIBE MERCHANT RUN</div>
+        <div class="subtitle">Jump to Survive</div>
+        
+        <!-- Username input at start -->
+        <div class="username-input-container" style="margin: 30px 0;">
+            <input type="text" 
+                   id="startUsernameInput" 
+                   class="username-input" 
+                   placeholder="Enter Your Name" 
+                   maxlength="20"
+                   enterkeyhint="go"
+                   style="margin-bottom: 20px;">
+            <div id="usernameError" style="color: #FF006B; font-size: 14px; margin-bottom: 10px; display: none;">
+                Please enter a valid name (no profanity)
+            </div>
+        </div>
+        
+        <button class="btn" id="playButton">PLAY</button>
+        <div class="instructions">
+            SPACE / TAP to jump over obstacles<br>
+            Don't let the beat stop!
+        </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="hidden">
+        <div class="title" style="margin-bottom: 5px;">GAME OVER</div>
+        <div id="finalScore" style="margin: 3px 0;">0</div>
+        <div class="subtitle" style="margin-bottom: 5px;">Final Score</div>
+        
+        <!-- Package A: Personal Best & Stats -->
+        <div style="margin: 5px 0;">
+            <div id="personalBestDisplay" style="color: #FFFF00; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 3px;">
+                Personal Best: <span id="personalBestScore">0</span>
+            </div>
+            <div id="newRecordDisplay" style="display: none; color: #00FFD1; font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 3px; text-shadow: 0 0 15px #00FFD1;">
+                🏆 NEW RECORD! 🏆
+            </div>
+            <div id="statsDisplay" style="color: #ffffff; font-size: 12px; text-align: center; opacity: 0.8;">
+                Coins: <span id="coinsCollected">0</span>
+            </div>
+        </div>
+        
+        <!-- Buttons row -->
+        <div style="display: flex; gap: 8px; margin: 8px 0; justify-content: center; flex-wrap: wrap;">
+            <button id="shareButton" class="btn" onclick="shareScore()" style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                <span>📸</span><span>SHARE</span>
+            </button>
+            <button class="btn" onclick="showHowToPlayFromGameOver()" style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                <span>📖</span><span>HELP</span>
+            </button>
+        </div>
+        
+        <div class="scoreboard-container" style="margin: 5px 0;">
+            <div class="scoreboard-title" style="margin-bottom: 5px;">LEADERBOARD</div>
+            <div id="leaderboard"></div>
+        </div>
+        
+        <button class="btn" onclick="restartGame()" style="margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            <span>🔄</span><span>RETRY</span>
+        </button>
+    </div>
+
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Canvas scale factor for mobile (must be declared before resizeCanvas)
+        let canvasScaleFactor = 1.0;
+        
+        // Load On Running logo for canvas rendering (clean O + n, no diagonal slash)
+        const onLogo = new Image();
+        onLogo.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MTIgMTc4OSIgd2lkdGg9IjkxMiIgaGVpZ2h0PSIxNzg5Ij4KPHN0eWxlPi5zaHAwIHsgZmlsbDogI2ZmZmZmZiB9PC9zdHlsZT4KPHBhdGggY2xhc3M9InNocDAiIGQ9Ik00MjAuOSA3MjAuMkMyOTUuNzggNzIyLjI4IDE5MS42NCA2MTUuMzUgMTkxLjY0IDQ5MS42M0MxOTEuNjQgMzcwLjcgMjkyLjI5IDI1OC44NyA0MjcuMTkgMjYyLjM2QzU0Ni43MSAyNjUuODcgNjUyLjk1IDM2My43MiA2NDkuNDYgNDk4LjYyQzY0Ni42NyA2MjAuMjQgNTQzLjkzIDcyMS42IDQyMC45IDcyMC4yWk00MjAuNSA2OUMxODguMyA2OSAwIDI1Ny4zIDAgNDg5LjVDMCA3MjEuNyAxODguMyA5MTAgNDIwLjUgOTEwQzY1Mi43IDkxMCA4NDEgNzIxLjcgODQxIDQ4OS41Qzg0MSAyNTcuMyA2NTIuNyA2OSA0MjAuNSA2OVoiLz4KPHBhdGggY2xhc3M9InNocDAiIGQ9Ik04MjYuMjYgMTQzMi40NUM4MjYuOTYgMTU0NS42OCA4MjYuMjYgMTY1OS42MSA4MjYuMjYgMTc3Mi44NEw4MjYuMjYgMTc4OC4yMkw2MjMuNTcgMTc4OC4yMkw2MjMuNTcgMTc3NC4yNEM2MjMuNTcgMTY1NS40MiA2MjQuMjcgMTUzNi42MSA2MjMuNTcgMTQxNy43N0M2MjMuNTcgMTM1NS41NiA2MDEuOSAxMzAxLjA0IDU1Ni40NyAxMjU3LjdDNTI2LjQxIDEyMjkuMDUgNDkwLjA3IDEyMTIuMjcgNDQ4LjEzIDEyMDYuNjhDMzkzLjYxIDExOTguOTkgMzQzLjk4IDEyMTIuMjcgMjk5Ljk1IDEyNDUuMTJDMjU1LjkxIDEyNzguNjcgMjMwLjA1IDEzMjQuMTEgMjIxLjY3IDEzNzcuOTJDMjE3LjQ3IDE0MDMuNzkgMjE2Ljc3IDE0MzAuMzUgMjE2Ljc3IDE0NTYuOTFDMjE2LjA4IDE1NjIuNDUgMjE2Ljc3IDE2NjcuMyAyMTYuNzcgMTc3Mi44NEwyMTYuNzcgMTc4Ny41MkwxNS41IDE3ODcuNTJMMTUuNSAxNzc0LjI0QzE1LjUgMTY0Ni4zMyAxNC4xIDE1MTcuNzMgMTYuMiAxMzg5LjgyQzE3LjYgMTMyMi4wMiAzOS4yNyAxMjU3LjcxIDc0LjkxIDExOTlDMTM0LjMyIDExMDEuMTUgMjE4LjkgMTAzOC4yNCAzMzAuMDIgMTAxMi4zOEMzNjQuMjcgMTAwNC42OSA0MDEuMzIgMTAwMS4yIDQzNi45NiAxMDAyLjZDNTQ4LjEgMTAwNy40OSA2NDMuMTUgMTA1MS41MiA3MTguNjQgMTEzNC43Qzc3Mi40NiAxMTk0LjgxIDgwNi43MSAxMjY0LjcxIDgxOC41OSAxMzQ1LjA5QzgyMy40NyAxMzc0LjQ0IDgyNi4yOCAxNDAzLjc4IDgyNi4yOCAxNDMyLjQ1Ii8+Cjwvc3ZnPgo=';
+        
+        // Set canvas size - fills container with zoom-out for mobile
+        function resizeCanvas() {
+            // Fill the entire container/iframe
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Set canvas to fill container
+            canvas.width = windowWidth;
+            canvas.height = windowHeight;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            
+            // Scale factor for game elements (obstacle WIDTH only, not speed/physics)
+            // Mobile: zoom out more to fit more gameplay on screen
+            // Desktop: normal scale
+            const isMobile = windowWidth <= 768;
+            if (isMobile) {
+                // Mobile: zoomed out (0.65 multiplier)
+                canvasScaleFactor = Math.min(windowWidth / 800, windowHeight / 500) * 0.65;
+            } else {
+                // Desktop: normal scale
+                canvasScaleFactor = Math.min(windowWidth / 800, windowHeight / 500) * 0.95;
+            }
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100);
+        });
+
+        // Profanity filter - basic list
+        const profanityList = ['fuck', 'shit', 'ass', 'bitch', 'damn', 'hell', 'piss', 'crap', 'dick', 'cock', 'pussy', 'bastard', 'slut', 'whore', 'fag', 'nigger', 'nigga', 'cunt', 'twat'];
+        
+        // Check for profanity
+        function containsProfanity(text) {
+            const lowerText = text.toLowerCase();
+            return profanityList.some(word => lowerText.includes(word));
+        }
+        
+        // Player username
+        let playerUsername = '';
+
+        // Game variables
+        let gameActive = false;
+        let score = 0;
+        let gameSpeed = 5.6; // 20% slower than 7
+        let gravity = 0.8;
+        let frameCount = 0;
+        let gamePaused = false;
+        
+        // Penalty system
+        let penaltyCooldown = 0; // Frames until next penalty can be applied
+        const PENALTY_COOLDOWN_FRAMES = 60; // 1 second cooldown (60 frames)
+        
+        // Personal best tracking
+        let personalBest = parseInt(localStorage.getItem('fnl-personal-best')) || 0;
+        let newRecordAchieved = false;
+        
+        // Package A: Power-ups
+        let powerUps = [];
+        let activePowerUps = [];
+        let powerUpsSpawnedThisHundred = 0;
+        let lastHundredMilestone = 0;
+        
+        // Penalty tracking (spawn 1 per 100 points, like power-ups)
+        let penaltiesSpawnedThisHundred = 0;
+        
+        // Package A: Coins
+        let coins = [];
+        let totalCoinsCollected = 0;
+        
+        // Magnet bonus coins: spawn 5 coins over 7 seconds when magnet activates
+        let magnetBonusCoinsScheduled = [];
+        
+        // Package A: Particles
+        let particles = [];
+        
+        // Penalty text indicators
+        let penaltyTexts = []; // Floating -10 text indicators
+        
+        // Penalty objects (obstacles that deduct points when collected)
+        let penaltyObjects = []; // Array of -10 penalty pickups
+        
+        // Package A: Screen shake
+        let screenShake = { active: false, intensity: 0, duration: 0, elapsed: 0 };
+        
+        // Package A: Near-miss tracking
+        let nearMissJustAwarded = false;
+
+        // Player
+        const player = {
+            x: 100,
+            y: 0,
+            width: 40,
+            height: 60,
+            velocityY: 0,
+            jumping: false,
+            grounded: false,
+            hasDoubleJump: true  // Can double jump
+        };
+
+        // Obstacles array
+        let obstacles = [];
+        let obstacleTimer = 0;
+        const obstacleInterval = 100;
+
+        // Cloud Monster transformation tracking
+        let cloudMonsterTriggered = false;
+        let cloudMonsterFlashStart = 0;
+        let cloudMonsterFlashActive = false;
+        let aerialObstaclesEnabled = false;
+
+        // Confetti particles
+        let confettiParticles = [];
+
+        // Ground
+        const groundHeight = 100;
+
+        // Colors
+        const neonColors = ['#ff00ff', '#00ffff', '#ff0080', '#00ff80', '#ffff00'];
+
+        // Create club light beams
+        function createClubLights() {
+            const container = document.getElementById('clubLights');
+            for (let i = 0; i < 5; i++) {
+                const beam = document.createElement('div');
+                beam.className = 'light-beam';
+                beam.style.left = (i * 25) + '%';
+                beam.style.top = '0';
+                beam.style.animationDelay = (i * 0.8) + 's';
+                beam.style.background = `linear-gradient(180deg, transparent 0%, ${neonColors[i]} 50%, transparent 100%)`;
+                container.appendChild(beam);
+            }
+        }
+
+        // Draw city skyline
+        // Skyline scrolling offset
+        let skylineOffset = 0;
+
+        function drawSkyline() {
+            const buildings = [
+                { x: 0, width: 80, height: 200 },
+                { x: 100, width: 60, height: 250 },
+                { x: 180, width: 70, height: 180 },
+                { x: 270, width: 90, height: 280 },
+                { x: 380, width: 65, height: 220 },
+                { x: 465, width: 75, height: 260 },
+                { x: 560, width: 80, height: 190 },
+                { x: 660, width: 70, height: 240 },
+                { x: 750, width: 50, height: 210 }
+            ];
+
+            // Total width of all buildings for seamless scrolling
+            const totalWidth = 800;
+
+            // Draw buildings twice for seamless scrolling
+            for (let repeat = 0; repeat < 3; repeat++) {
+                buildings.forEach((building, index) => {
+                    const buildingX = building.x + skylineOffset + (repeat * totalWidth);
+                    
+                    // Only draw if visible on screen
+                    if (buildingX + building.width > 0 && buildingX < canvas.width) {
+                        const baseY = canvas.height - groundHeight - building.height;
+                        
+                        // Building body
+                        ctx.fillStyle = '#1a1a2e';
+                        ctx.fillRect(buildingX, baseY, building.width, building.height);
+                        
+                        // Neon outline
+                        ctx.strokeStyle = neonColors[index % neonColors.length];
+                        ctx.lineWidth = 2;
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = neonColors[index % neonColors.length];
+                        ctx.strokeRect(buildingX, baseY, building.width, building.height);
+                        
+                        // Moving head light beams (like stage lighting)
+                        const beamCount = 2;
+                        for (let b = 0; b < beamCount; b++) {
+                            const beamX = buildingX + (building.width / (beamCount + 1)) * (b + 1);
+                            const beamY = baseY + 20;
+                            
+                            // Oscillating angle for moving head effect
+                            const time = frameCount * 0.02 + index + b;
+                            const angle = Math.sin(time) * 0.6; // Sweep angle
+                            
+                            // Draw light beam
+                            ctx.save();
+                            ctx.translate(beamX, beamY);
+                            ctx.rotate(angle);
+                            
+                            // Create gradient beam
+                            const beamGradient = ctx.createLinearGradient(0, 0, 0, 300);
+                            const beamColor = neonColors[index % neonColors.length];
+                            beamGradient.addColorStop(0, beamColor);
+                            beamGradient.addColorStop(0.3, beamColor + '80'); // 50% opacity
+                            beamGradient.addColorStop(1, 'transparent');
+                            
+                            ctx.fillStyle = beamGradient;
+                            ctx.shadowBlur = 30;
+                            ctx.shadowColor = beamColor;
+                            
+                            // Draw beam shape (widening cone)
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(-15, 300);
+                            ctx.lineTo(15, 300);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            ctx.restore();
+                        }
+                        
+                        // Static windows (non-flashing)
+                        for (let y = baseY + 30; y < baseY + building.height - 10; y += 25) {
+                            for (let x = buildingX + 10; x < buildingX + building.width - 10; x += 20) {
+                                ctx.fillStyle = '#444466';
+                                ctx.fillRect(x, y, 8, 8);
+                            }
+                        }
+                        
+                        ctx.shadowBlur = 0;
+                    }
+                });
+            }
+        }
+
+        // Draw ground
+        function drawGround() {
+            const groundY = canvas.height - groundHeight;
+            
+            // Ground platform
+            ctx.fillStyle = '#2a2a3e';
+            ctx.fillRect(0, groundY, canvas.width, groundHeight);
+            
+            // Neon grid on ground
+            ctx.strokeStyle = '#ff00ff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ff00ff';
+            
+            // Horizontal lines
+            for (let i = 0; i < 5; i++) {
+                const y = groundY + (i * 20);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Vertical lines (moving)
+            const offset = (frameCount * 2) % 40;
+            for (let i = -1; i < canvas.width / 40 + 1; i++) {
+                const x = (i * 40) - offset;
+                ctx.beginPath();
+                ctx.moveTo(x, groundY);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            ctx.shadowBlur = 0;
+        }
+
+        // Draw player
+        function drawPlayer() {
+            const groundY = canvas.height - groundHeight - player.height;
+            
+            // Check if score is 500+ for monster transformation
+            const isMonster = score >= 500;
+            
+            // Neon glow
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = isMonster ? '#00ff00' : '#00ffff';
+            
+            if (isMonster) {
+                // GREEN MONSTER MODE (500+ points)
+                // Monster body - rounded and chunky
+                ctx.fillStyle = '#00ff00';
+                ctx.beginPath();
+                ctx.roundRect(player.x + 8, player.y + 15, 24, 30, 5);
+                ctx.fill();
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Monster head - larger circle
+                ctx.fillStyle = '#00ff00';
+                ctx.beginPath();
+                ctx.arc(player.x + 20, player.y + 8, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Eyes - angry/fierce look
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(player.x + 17, player.y + 7, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(player.x + 23, player.y + 7, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Fangs
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(player.x + 18, player.y + 10);
+                ctx.lineTo(player.x + 16, player.y + 13);
+                ctx.lineTo(player.x + 20, player.y + 10);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(player.x + 22, player.y + 10);
+                ctx.lineTo(player.x + 20, player.y + 13);
+                ctx.lineTo(player.x + 24, player.y + 10);
+                ctx.fill();
+                
+                // Monster legs - thicker
+                const legOffset = Math.sin(frameCount * 0.3) * 5;
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(player.x + 8, player.y + 45, 10, 10 + legOffset);
+                ctx.fillRect(player.x + 22, player.y + 45, 10, 10 - legOffset);
+                
+                // Monster arms - short and stubby
+                const armOffset = Math.sin(frameCount * 0.3) * 8;
+                ctx.fillRect(player.x + 2, player.y + 20 + armOffset, 6, 12);
+                ctx.fillRect(player.x + 32, player.y + 20 - armOffset, 6, 12);
+                
+            } else {
+                // NORMAL RUNNING MAN (below 500 points)
+                // Body - main torso
+                ctx.fillStyle = '#00ffff';
+                ctx.fillRect(player.x + 12, player.y + 15, 16, 25);
+                
+                // Outline
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(player.x + 12, player.y + 15, 16, 25);
+                
+                // Head
+                ctx.fillStyle = '#ff00ff';
+                ctx.beginPath();
+                ctx.arc(player.x + 20, player.y + 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Running animation - legs
+                const legOffset = Math.sin(frameCount * 0.3) * 5;
+                
+                // Left leg
+                ctx.fillStyle = '#00ffff';
+                ctx.fillRect(player.x + 10, player.y + 40, 8, 15 + legOffset);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(player.x + 10, player.y + 40, 8, 15 + legOffset);
+                
+                // Right leg (opposite movement)
+                ctx.fillRect(player.x + 22, player.y + 40, 8, 15 - legOffset);
+                ctx.strokeRect(player.x + 22, player.y + 40, 8, 15 - legOffset);
+                
+                // Running animation - arms
+                const armOffset = Math.sin(frameCount * 0.3) * 8;
+                
+                // Left arm
+                ctx.fillStyle = '#ff00ff';
+                ctx.fillRect(player.x + 5, player.y + 20 + armOffset, 6, 15);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(player.x + 5, player.y + 20 + armOffset, 6, 15);
+                
+                // Right arm (opposite movement)
+                ctx.fillRect(player.x + 29, player.y + 20 - armOffset, 6, 15);
+                ctx.strokeRect(player.x + 29, player.y + 20 - armOffset, 6, 15);
+            }
+            
+            ctx.shadowBlur = 0;
+        }
+
+        // Draw obstacles
+        function drawObstacles() {
+            const isCloudMode = score >= 500;
+            
+            obstacles.forEach(obs => {
+                if (obs.aerial) {
+                    // AERIAL CLOUD OBSTACLES (always clouds)
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ffffff';
+                    ctx.fillStyle = '#ffffff';
+                    
+                    // Draw fluffy cloud shape
+                    const centerX = obs.x + obs.width / 2;
+                    const centerY = obs.y + obs.height / 2;
+                    const radius = obs.height / 3;
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX - radius * 0.7, centerY, radius * 0.8, 0, Math.PI * 2);
+                    ctx.arc(centerX, centerY - radius * 0.4, radius, 0, Math.PI * 2);
+                    ctx.arc(centerX + radius * 0.7, centerY, radius * 0.8, 0, Math.PI * 2);
+                    ctx.arc(centerX, centerY + radius * 0.3, radius * 0.9, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (isCloudMode) {
+                    // GROUND CLOUD OBSTACLES (500+ points)
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ffffff';
+                    ctx.fillStyle = '#ffffff';
+                    
+                    // Draw fluffy cloud shape
+                    const centerX = obs.x + obs.width / 2;
+                    const centerY = obs.y + obs.height / 2;
+                    const radius = obs.height / 3;
+                    
+                    ctx.beginPath();
+                    ctx.arc(centerX - radius * 0.7, centerY, radius * 0.8, 0, Math.PI * 2);
+                    ctx.arc(centerX, centerY - radius * 0.4, radius, 0, Math.PI * 2);
+                    ctx.arc(centerX + radius * 0.7, centerY, radius * 0.8, 0, Math.PI * 2);
+                    ctx.arc(centerX, centerY + radius * 0.3, radius * 0.9, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // NORMAL NEON OBSTACLES (below 500 points)
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = obs.color;
+                    ctx.fillStyle = obs.color;
+                    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                    
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+                }
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        // Create obstacle
+        function createObstacle() {
+            // 15% bigger: base 46 (was 40), range 46 (was 40)
+            const height = 46 + Math.random() * 46;
+            
+            if (aerialObstaclesEnabled) {
+                // CLOUD MONSTER MODE: Create obstacles on BOTH top and bottom
+                
+                // Scale obstacle sizes for mobile
+                const groundWidth = 34.5 * canvasScaleFactor;
+                const aerialWidth = 70 * canvasScaleFactor; // Increased from 50 to 70 (40% bigger!)
+                const aerialHeight = 56 * canvasScaleFactor; // Increased from 40 to 56 (40% bigger!)
+                const offsetDistance = (150 + Math.random() * 100) * canvasScaleFactor;
+                
+                // Always create ground obstacle
+                obstacles.push({
+                    x: canvas.width,
+                    y: canvas.height - groundHeight - height,
+                    width: groundWidth,
+                    height: height,
+                    color: '#ffffff',
+                    aerial: false
+                });
+                
+                // 50% chance to also add aerial obstacle, offset scaled to canvas
+                if (Math.random() > 0.5) {
+                    obstacles.push({
+                        x: canvas.width + offsetDistance, // Scaled offset 150-250px from ground obstacle
+                        y: 50 + Math.random() * 100, // Top portion of screen
+                        width: aerialWidth, // Scaled width for aerial clouds (now 40% bigger)
+                        height: aerialHeight, // Scaled height for clouds (now 40% bigger)
+                        color: '#ffffff',
+                        aerial: true
+                    });
+                }
+            } else {
+                // Normal mode: ground obstacles only
+                const groundWidth = 34.5 * canvasScaleFactor;
+                
+                obstacles.push({
+                    x: canvas.width,
+                    y: canvas.height - groundHeight - height,
+                    width: groundWidth, // Scaled width
+                    height: height,
+                    color: neonColors[Math.floor(Math.random() * neonColors.length)],
+                    aerial: false
+                });
+            }
+        }
+
+        // Confetti celebration system
+        function triggerConfetti() {
+            const colors = ['#00FFD1', '#FF006B', '#FFFF00', '#00ffff', '#ff00ff'];
+            for (let i = 0; i < 150; i++) { // Tripled from 50 to 150!
+                confettiParticles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 4,
+                    life: 100,
+                    rotation: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function updateConfetti() {
+            confettiParticles.forEach(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.3; // Gravity
+                particle.rotation += 0.1;
+                particle.life--;
+            });
+            confettiParticles = confettiParticles.filter(p => p.life > 0);
+        }
+
+        // PACKAGE A: Coin System
+        function createCoin() {
+            const y = canvas.height - groundHeight - 100 - Math.random() * 150;
+            coins.push({
+                x: canvas.width,
+                y: y,
+                width: 30,
+                height: 30,
+                collected: false
+            });
+        }
+
+        function updateCoins() {
+            const currentSpeed = gameSpeed * (1 + (score / 500) * 1.5);
+            coins.forEach(coin => {
+                coin.x -= currentSpeed;
+            });
+            coins = coins.filter(c => c.x > -50 && !c.collected);
+            
+            // Check collection
+            coins.forEach(coin => {
+                if (!coin.collected &&
+                    player.x < coin.x + coin.width &&
+                    player.x + player.width > coin.x &&
+                    player.y < coin.y + coin.height &&
+                    player.y + player.height > coin.y) {
+                    coin.collected = true;
+                    totalCoinsCollected++;
+                    score += 10; // Bonus points for coins
+                    document.getElementById('score').textContent = score;
+                }
+            });
+        }
+
+        function drawCoins() {
+            coins.forEach(coin => {
+                if (!coin.collected) {
+                    ctx.save();
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#FFFF00';
+                    ctx.fillStyle = '#FFFF00';
+                    ctx.beginPath();
+                    ctx.arc(coin.x + coin.width/2, coin.y + coin.height/2, coin.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#FF006B';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            });
+        }
+
+        // PACKAGE A: Power-up System
+        function createPowerUp() {
+            const types = Object.keys(POWER_UP_TYPES);
+            const type = types[Math.floor(Math.random() * types.length)];
+            const powerUpData = POWER_UP_TYPES[type];
+            
+            activePowerUps.push({
+                type: type,
+                x: canvas.width,
+                y: canvas.height - groundHeight - 150,
+                width: 40,
+                height: 40,
+                color: powerUpData.color,
+                duration: powerUpData.duration,
+                active: false,
+                collected: false,
+                activeTimer: 0
+            });
+        }
+
+        function updatePowerUps() {
+            const currentSpeed = gameSpeed * (1 + (score / 500) * 1.5);
+            
+            activePowerUps.forEach(powerUp => {
+                if (!powerUp.collected) {
+                    powerUp.x -= currentSpeed;
+                }
+                
+                // Check collection
+                if (!powerUp.collected &&
+                    player.x < powerUp.x + powerUp.width &&
+                    player.x + player.width > powerUp.x &&
+                    player.y < powerUp.y + powerUp.height &&
+                    player.y + player.height > powerUp.y) {
+                    powerUp.collected = true;
+                    powerUp.active = true;
+                    powerUp.activeTimer = powerUp.duration;
+                }
+                
+                // Update active timer
+                if (powerUp.active && powerUp.activeTimer > 0) {
+                    powerUp.activeTimer -= 1000 / 60; // Assuming 60 FPS
+                    if (powerUp.activeTimer <= 0) {
+                        powerUp.active = false;
+                    }
+                }
+            });
+            
+            activePowerUps = activePowerUps.filter(p => p.x > -50 || p.active);
+        }
+
+        function drawPowerUps() {
+            activePowerUps.forEach(powerUp => {
+                if (!powerUp.collected) {
+                    ctx.save();
+                    ctx.shadowBlur = 25;
+                    ctx.shadowColor = powerUp.color;
+                    ctx.fillStyle = powerUp.color;
+                    ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+                    
+                    // Draw icon based on type
+                    ctx.fillStyle = '#000000';
+                    ctx.font = 'bold 24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const icon = powerUp.type === 'SHIELD' ? '🛡' : powerUp.type === 'SPEED' ? '⚡' : '🧲';
+                    ctx.fillText(icon, powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2);
+                    ctx.restore();
+                }
+            });
+            
+            // Draw active power-up indicators
+            let offsetY = 100;
+            activePowerUps.filter(p => p.active).forEach(powerUp => {
+                ctx.save();
+                ctx.fillStyle = powerUp.color;
+                ctx.font = 'bold 16px Oswald';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = powerUp.color;
+                const timeLeft = (powerUp.activeTimer / 1000).toFixed(1);
+                ctx.fillText(`${POWER_UP_TYPES[powerUp.type].name}: ${timeLeft}s`, canvas.width - 150, offsetY);
+                offsetY += 25;
+                ctx.restore();
+            });
+        }
+
+        function hasActivePowerUp(type) {
+            return activePowerUps.some(p => p.active && p.type === type);
+        }
+
+        // PACKAGE A: Particle Trail
+        function createParticleTrail() {
+            if (frameCount % 2 === 0) { // Create every other frame
+                particleTrail.push({
+                    x: player.x,
+                    y: player.y + player.height / 2,
+                    size: 8,
+                    life: 20,
+                    color: score >= 500 ? '#00ff00' : '#00FFD1'
+                });
+            }
+        }
+
+        function updateParticleTrail() {
+            particleTrail.forEach(particle => {
+                particle.x -= 3;
+                particle.life--;
+                particle.size *= 0.95;
+            });
+            particleTrail = particleTrail.filter(p => p.life > 0);
+        }
+
+        function drawParticleTrail() {
+            particleTrail.forEach(particle => {
+                ctx.save();
+                ctx.globalAlpha = particle.life / 20;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = particle.color;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        // PACKAGE A: Screen Shake
+        function triggerScreenShake(intensity, duration) {
+            screenShake = {
+                active: true,
+                intensity: intensity,
+                duration: duration,
+                elapsed: 0
+            };
+        }
+
+        function updateScreenShake() {
+            if (screenShake.active) {
+                screenShake.elapsed += 16.67; // ~60fps
+                if (screenShake.elapsed >= screenShake.duration) {
+                    screenShake.active = false;
+                    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+                }
+            }
+        }
+
+        function applyScreenShake() {
+            if (screenShake.active) {
+                const progress = screenShake.elapsed / screenShake.duration;
+                const currentIntensity = screenShake.intensity * (1 - progress);
+                const offsetX = (Math.random() - 0.5) * currentIntensity;
+                const offsetY = (Math.random() - 0.5) * currentIntensity;
+                ctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
+            }
+        }
+
+        // PACKAGE A: Near-Miss Detection
+        function checkNearMiss() {
+            obstacles.forEach(obs => {
+                const nearMissDistance = 30;
+                const playerRight = player.x + player.width;
+                const obsLeft = obs.x;
+                
+                // Check if obstacle just passed the player
+                if (playerRight >= obsLeft - nearMissDistance && 
+                    playerRight <= obsLeft + nearMissDistance &&
+                    obs.x !== lastNearMiss) {
+                    // Check if player didn't collide (near miss!)
+                    const isNearMiss = !(player.x < obs.x + obs.width &&
+                                        player.x + player.width > obs.x &&
+                                        player.y < obs.y + obs.height &&
+                                        player.y + player.height > obs.y);
+                    
+                    if (isNearMiss) {
+                        score += 5; // Bonus for near miss
+                        document.getElementById('score').textContent = score;
+                        lastNearMiss = obs.x;
+                        
+                        // Visual feedback
+                        showFloatingText('+5 CLOSE!', player.x + 50, player.y, '#FFFF00');
+                    }
+                }
+            });
+        }
+
+        function showFloatingText(text, x, y, color) {
+            // Add to confetti array for reuse
+            confettiParticles.push({
+                x: x,
+                y: y,
+                vx: 0,
+                vy: -2,
+                rotation: 0,
+                life: 30,
+                size: 20,
+                color: color,
+                text: text,
+                isText: true
+            });
+        }
+
+        function drawConfetti() {
+            confettiParticles.forEach(particle => {
+                ctx.save();
+                
+                // Package A: Handle floating text differently
+                if (particle.isFloatingText) {
+                    ctx.globalAlpha = particle.life / 40;
+                    ctx.fillStyle = particle.color;
+                    ctx.font = 'bold 20px Oswald';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = particle.color;
+                    ctx.fillText(particle.text, particle.x, particle.y);
+                } else {
+                    // Regular confetti
+                    ctx.translate(particle.x, particle.y);
+                    ctx.rotate(particle.rotation);
+                    ctx.globalAlpha = particle.life / 100;
+                    ctx.fillStyle = particle.color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = particle.color;
+                    ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+                }
+                
+                ctx.restore();
+            });
+        }
+
+        // Draw On Running logo on canvas
+        function drawOnLogo() {
+            if (onLogo.complete && onLogo.naturalWidth !== 0) {
+                ctx.save();
+                
+                // Position in top-right corner - 50% smaller (25px instead of 50px)
+                const logoWidth = 25;
+                const logoHeight = logoWidth * (onLogo.naturalHeight / onLogo.naturalWidth);
+                const padding = 20;
+                const x = canvas.width - logoWidth - padding;
+                const y = padding;
+                
+                // Logo is natively white with transparent background
+                ctx.globalAlpha = 0.9;
+                
+                // Draw with glow
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                ctx.drawImage(onLogo, x, y, logoWidth, logoHeight);
+                
+                ctx.restore();
+            }
+        }
+
+        // ===== PACKAGE A: NEW FEATURES =====
+        
+        // Pause System
+        function togglePause() {
+            gamePaused = !gamePaused;
+            if (gamePaused) {
+                // Show pause overlay
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#00FFD1';
+                ctx.font = 'bold 60px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#00FFD1';
+                ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+                ctx.font = 'bold 20px Oswald';
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 10;
+                ctx.fillText('Press ESC or P to resume', canvas.width / 2, canvas.height / 2 + 60);
+                ctx.restore();
+            }
+        }
+        
+        // Coin System
+        function spawnCoin() {
+            const y = Math.random() * (canvas.height - groundHeight - 150) + 50;
+            coins.push({
+                x: canvas.width,
+                y: y,
+                width: 30,
+                height: 30,
+                rotation: 0
+            });
+        }
+        
+        function updateCoins() {
+            // Tiered difficulty speed modifiers
+            let speedModifier;
+            if (score < 250) {
+                speedModifier = 0.85; // Easy/Learning
+            } else if (score < 500) {
+                speedModifier = 0.95; // Normal
+            } else {
+                speedModifier = 1.05; // Hard Mode
+            }
+            
+            const speed = gameSpeed * (1 + (score / 500) * 1.5) * speedModifier;
+            
+            // Check if magnet is active
+            const magnetActive = hasActivePowerUp('MAGNET');
+            
+            coins.forEach(coin => {
+                coin.x -= speed;
+                coin.rotation += 0.1;
+                
+                // MAGNET ATTRACTION - pull coins toward player
+                if (magnetActive) {
+                    const dx = player.x + player.width / 2 - (coin.x + coin.width / 2);
+                    const dy = player.y + player.height / 2 - (coin.y + coin.height / 2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Attract if within range (300 pixels)
+                    if (distance < 300 && distance > 0) {
+                        const attractionStrength = 8; // pixels per frame
+                        coin.x += (dx / distance) * attractionStrength;
+                        coin.y += (dy / distance) * attractionStrength;
+                    }
+                }
+            });
+            
+            // Check collision with player
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+                if (player.x < coin.x + coin.width &&
+                    player.x + player.width > coin.x &&
+                    player.y < coin.y + coin.height &&
+                    player.y + player.height > coin.y) {
+                    // Collected!
+                    score += 10;
+                    totalCoinsCollected++;
+                    document.getElementById('score').textContent = score;
+                    coins.splice(i, 1);
+                    // Add particle effect
+                    for (let j = 0; j < 10; j++) {
+                        particles.push({
+                            x: coin.x + 15,
+                            y: coin.y + 15,
+                            vx: (Math.random() - 0.5) * 5,
+                            vy: (Math.random() - 0.5) * 5 - 2,
+                            life: 30,
+                            color: '#FFFF00',
+                            size: 4
+                        });
+                    }
+                }
+            }
+            
+            coins = coins.filter(c => c.x > -50);
+        }
+        
+        function drawCoins() {
+            coins.forEach(coin => {
+                ctx.save();
+                ctx.translate(coin.x + coin.width/2, coin.y + coin.height/2);
+                ctx.rotate(coin.rotation);
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#FFFF00';
+                ctx.fillStyle = '#FFFF00';
+                ctx.beginPath();
+                ctx.arc(0, 0, coin.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#FF006B';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText('$', 0, 5);
+                ctx.restore();
+            });
+        }
+        
+        // Penalty Object System (-10 points)
+        function spawnPenaltyObject() {
+            penaltyObjects.push({
+                x: canvas.width,
+                y: canvas.height - groundHeight - 100 - Math.random() * 100, // Randomize height
+                width: 40,
+                height: 40,
+                rotation: 0
+            });
+        }
+        
+        function updatePenaltyObjects() {
+            // Same speed system as coins
+            let speedModifier;
+            if (score < 250) {
+                speedModifier = 0.85;
+            } else if (score < 500) {
+                speedModifier = 0.95;
+            } else {
+                speedModifier = 1.05;
+            }
+            
+            const speed = gameSpeed * (1 + (score / 500) * 1.5) * speedModifier;
+            
+            penaltyObjects.forEach(obj => {
+                obj.x -= speed;
+                obj.rotation += 0.15; // Rotate slightly faster than coins
+            });
+            
+            // Remove off-screen objects
+            penaltyObjects = penaltyObjects.filter(obj => obj.x + obj.width > 0);
+            
+            // Check collision with player
+            for (let i = penaltyObjects.length - 1; i >= 0; i--) {
+                const obj = penaltyObjects[i];
+                if (player.x < obj.x + obj.width &&
+                    player.x + player.width > obj.x &&
+                    player.y < obj.y + obj.height &&
+                    player.y + player.height > obj.y) {
+                    // Hit penalty object!
+                    // Never apply penalty in 480-520 range (Cloud Monster safe zone)
+                    const inSafeZone = (score >= 480 && score <= 520);
+                    
+                    if (!inSafeZone && penaltyCooldown <= 0) {
+                        score = Math.max(0, score - 10); // Deduct 10, minimum 0
+                        document.getElementById('score').textContent = score;
+                        
+                        // Visual feedback
+                        triggerScreenShake(5, 200);
+                        penaltyCooldown = PENALTY_COOLDOWN_FRAMES;
+                        
+                        // Add floating "-10" text
+                        penaltyTexts.push({
+                            x: obj.x + obj.width / 2,
+                            y: obj.y,
+                            life: 60, // frames
+                            velocityY: -2
+                        });
+                    }
+                    
+                    // Remove the penalty object
+                    penaltyObjects.splice(i, 1);
+                    
+                    // Red particle burst
+                    for (let j = 0; j < 15; j++) {
+                        particles.push({
+                            x: obj.x + obj.width / 2,
+                            y: obj.y + obj.height / 2,
+                            velocityX: (Math.random() - 0.5) * 8,
+                            velocityY: (Math.random() - 0.5) * 8,
+                            size: Math.random() * 4 + 2,
+                            color: '#FF0000',
+                            life: 20
+                        });
+                    }
+                }
+            }
+        }
+        
+        function drawPenaltyObjects() {
+            penaltyObjects.forEach(obj => {
+                ctx.save();
+                ctx.translate(obj.x + obj.width/2, obj.y + obj.height/2);
+                ctx.rotate(obj.rotation);
+                
+                // Red/dark theme for penalty
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#FF0000';
+                
+                // Red spiky circle
+                ctx.fillStyle = '#FF0000';
+                ctx.strokeStyle = '#8B0000';
+                ctx.lineWidth = 3;
+                
+                // Draw spiky shape
+                ctx.beginPath();
+                const spikes = 8;
+                const outerRadius = obj.width / 2;
+                const innerRadius = obj.width / 3;
+                for (let i = 0; i < spikes * 2; i++) {
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const angle = (i * Math.PI) / spikes;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw "-10" text
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('-10', 0, 0);
+                
+                ctx.restore();
+            });
+        }
+        
+        function updatePenaltyTexts() {
+            penaltyTexts.forEach(text => {
+                text.y += text.velocityY;
+                text.life--;
+            });
+            penaltyTexts = penaltyTexts.filter(text => text.life > 0);
+        }
+        
+        function drawPenaltyTexts() {
+            penaltyTexts.forEach(text => {
+                ctx.save();
+                ctx.globalAlpha = text.life / 60;
+                ctx.fillStyle = '#FF0000';
+                ctx.font = 'bold 32px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 3;
+                ctx.strokeText('-10', text.x, text.y);
+                ctx.fillText('-10', text.x, text.y);
+                ctx.restore();
+            });
+        }
+        
+        // Power-up System
+        function spawnPowerUp() {
+            const types = ['SHIELD', 'SPEED', 'MAGNET'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            spawnPowerUpType(type);
+        }
+        
+        function spawnPowerUpType(type) {
+            // Check if there's already a power-up too close
+            const minDistance = 300; // Minimum 300px between power-ups
+            const tooClose = powerUps.some(pu => {
+                return canvas.width - pu.x < minDistance;
+            });
+            
+            // Don't spawn if another power-up is too close
+            if (tooClose) return;
+            
+            const colors = { SHIELD: '#00FFD1', SPEED: '#FFFF00', MAGNET: '#FF006B' };
+            
+            const powerUpWidth = 40;
+            const powerUpHeight = 40;
+            const spawnX = canvas.width;
+            
+            // Try multiple spawn positions to avoid obstacles
+            const possibleYPositions = [
+                canvas.height - groundHeight - 100, // Default ground position
+                canvas.height - groundHeight - 180, // Higher ground position
+                150, // Mid-air position
+                200, // Mid-air position
+                100  // High air position
+            ];
+            
+            let spawnY = null;
+            
+            // Find a Y position that doesn't collide with nearby obstacles
+            for (const testY of possibleYPositions) {
+                let safe = true;
+                
+                // Check all obstacles to see if this position would collide
+                for (const obs of obstacles) {
+                    // Check if obstacle will be near this power-up when it spawns
+                    // Power-up spawns at canvas.width, check obstacles within range
+                    const futureObsX = obs.x; // Current obstacle position
+                    const powerUpLifetime = 3000; // Approx time power-up is on screen
+                    const obsSpeed = gameSpeed * 5; // Obstacle speed
+                    const futureDistance = obsSpeed * (powerUpLifetime / 1000); // Distance obstacle will travel
+                    
+                    // Check if obstacle will overlap with power-up position
+                    if (futureObsX > spawnX - futureDistance && futureObsX < spawnX + 100) {
+                        // Check vertical collision
+                        const verticalOverlap = !(testY + powerUpHeight < obs.y || testY > obs.y + obs.height);
+                        if (verticalOverlap) {
+                            safe = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (safe) {
+                    spawnY = testY;
+                    break;
+                }
+            }
+            
+            // If no safe position found, don't spawn
+            if (spawnY === null) return;
+            
+            powerUps.push({
+                x: spawnX,
+                y: spawnY,
+                width: powerUpWidth,
+                height: powerUpHeight,
+                type: type,
+                color: colors[type]
+            });
+        }
+        
+        function updatePowerUps() {
+            // Tiered difficulty speed modifiers
+            let speedModifier;
+            if (score < 250) {
+                speedModifier = 0.85; // Easy/Learning
+            } else if (score < 500) {
+                speedModifier = 0.95; // Normal
+            } else {
+                speedModifier = 1.05; // Hard Mode
+            }
+            
+            const speed = gameSpeed * (1 + (score / 500) * 1.5) * speedModifier;
+            powerUps.forEach(powerUp => {
+                powerUp.x -= speed;
+            });
+            
+            // Check collision
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                const powerUp = powerUps[i];
+                if (player.x < powerUp.x + powerUp.width &&
+                    player.x + player.width > powerUp.x &&
+                    player.y < powerUp.y + powerUp.height &&
+                    player.y + player.height > powerUp.y) {
+                    // Activate power-up!
+                    activatePowerUp(powerUp.type);
+                    powerUps.splice(i, 1);
+                }
+            }
+            
+            powerUps = powerUps.filter(p => p.x > -50);
+            
+            // Update active power-ups
+            for (let i = activePowerUps.length - 1; i >= 0; i--) {
+                activePowerUps[i].timeLeft -= 16.67; // ~60fps
+                if (activePowerUps[i].timeLeft <= 0) {
+                    // If SPEED power-up is expiring, reduce game speed by 30%
+                    if (activePowerUps[i].type === 'SPEED') {
+                        gameSpeed /= 1.30;
+                    }
+                    activePowerUps.splice(i, 1);
+                }
+            }
+        }
+        
+        function activatePowerUp(type) {
+            const durations = { SHIELD: 2500, SPEED: 3000, MAGNET: 7000 };
+            
+            // Check if this power-up type is already active
+            const existingPowerUp = activePowerUps.find(p => p.type === type);
+            
+            if (type === 'SPEED' && existingPowerUp) {
+                // Stack SPEED power-up by adding to existing time
+                existingPowerUp.timeLeft += durations[type];
+            } else if (existingPowerUp) {
+                // For other power-ups, just refresh the timer
+                existingPowerUp.timeLeft = durations[type];
+            } else {
+                // Add new power-up
+                activePowerUps.push({
+                    type: type,
+                    timeLeft: durations[type]
+                });
+                
+                // If it's SPEED, increase game speed by 30%
+                if (type === 'SPEED') {
+                    gameSpeed *= 1.30;
+                }
+                
+                // If it's MAGNET, schedule 5 bonus coins over 7 seconds
+                if (type === 'MAGNET') {
+                    // Schedule coins at: 0s, 1.4s, 2.8s, 4.2s, 5.6s (evenly distributed)
+                    const currentTime = Date.now();
+                    magnetBonusCoinsScheduled = [
+                        currentTime + 0,      // Immediate
+                        currentTime + 1400,   // 1.4 seconds
+                        currentTime + 2800,   // 2.8 seconds
+                        currentTime + 4200,   // 4.2 seconds
+                        currentTime + 5600    // 5.6 seconds
+                    ];
+                }
+            }
+        }
+        
+        function hasActivePowerUp(type) {
+            return activePowerUps.some(p => p.type === type);
+        }
+        
+        function drawPowerUps() {
+            powerUps.forEach(powerUp => {
+                ctx.save();
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = powerUp.color;
+                ctx.fillStyle = powerUp.color;
+                ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+                
+                // Icon
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const icons = { SHIELD: '🛡', SPEED: '⚡', MAGNET: '🧲' };
+                ctx.fillText(icons[powerUp.type], powerUp.x + 20, powerUp.y + 20);
+                ctx.restore();
+            });
+            
+            // Draw active indicators
+            let offsetY = 100;
+            activePowerUps.forEach(powerUp => {
+                ctx.save();
+                const colors = { SHIELD: '#00FFD1', SPEED: '#FFFF00', MAGNET: '#FF006B' };
+                ctx.fillStyle = colors[powerUp.type];
+                ctx.font = 'bold 16px Oswald';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = colors[powerUp.type];
+                ctx.fillText(`${powerUp.type}: ${(powerUp.timeLeft/1000).toFixed(1)}s`, canvas.width - 120, offsetY);
+                offsetY += 25;
+                ctx.restore();
+            });
+        }
+        
+        // Particle Trail
+        function createParticleTrail() {
+            if (frameCount % 2 === 0) { // Spawn more frequently (every 2 frames instead of 3)
+                particles.push({
+                    x: player.x,
+                    y: player.y + player.height / 2,
+                    vx: -2,
+                    vy: (Math.random() - 0.5) * 2,
+                    life: 35, // Longer life (35 frames instead of 20)
+                    color: score >= 500 ? '#00ff00' : '#00FFD1',
+                    size: 6
+                });
+            }
+        }
+        
+        function updateParticles() {
+            particles.forEach(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.life--;
+                particle.size *= 0.96;
+            });
+            particles = particles.filter(p => p.life > 0);
+        }
+        
+        function drawParticles() {
+            particles.forEach(particle => {
+                ctx.save();
+                ctx.globalAlpha = particle.life / 35; // Adjust alpha calculation for new life value
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = particle.color;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+        
+        // Screen Shake
+        function triggerScreenShake(intensity, duration) {
+            screenShake = { active: true, intensity, duration, elapsed: 0 };
+        }
+        
+        function updateScreenShake() {
+            if (screenShake.active) {
+                screenShake.elapsed += 16.67;
+                if (screenShake.elapsed >= screenShake.duration) {
+                    screenShake.active = false;
+                }
+            }
+        }
+        
+        function applyScreenShake() {
+            if (screenShake.active) {
+                const progress = screenShake.elapsed / screenShake.duration;
+                const intensity = screenShake.intensity * (1 - progress);
+                const offsetX = (Math.random() - 0.5) * intensity;
+                const offsetY = (Math.random() - 0.5) * intensity;
+                ctx.translate(offsetX, offsetY);
+            }
+        }
+        
+        // Near-Miss Detection
+        function checkNearMiss() {
+            // Only check for near-miss if player is in the air (jumping)
+            if (player.grounded) return;
+            
+            obstacles.forEach(obs => {
+                // Only count near-miss if obstacle has passed behind the player
+                const obstaclePassed = obs.x + obs.width < player.x;
+                
+                if (obstaclePassed && !obs.nearMissCounted) {
+                    // Check if player was close enough (within 5px vertically)
+                    const playerBottom = player.y + player.height;
+                    const obstacleTop = obs.y;
+                    const verticalGap = obstacleTop - playerBottom;
+                    
+                    // Near-miss: player passed within 5 pixels above the obstacle
+                    if (verticalGap >= 0 && verticalGap <= 5) {
+                        score += 5;
+                        document.getElementById('score').textContent = score;
+                        obs.nearMissCounted = true;
+                        
+                        // Visual feedback
+                        confettiParticles.push({
+                            x: player.x + 50,
+                            y: player.y,
+                            vx: 0,
+                            vy: -3,
+                            rotation: 0,
+                            life: 40,
+                            color: '#FFFF00',
+                            text: '+5 CLOSE!',
+                            isFloatingText: true
+                        });
+                    }
+                }
+            });
+        }
+        
+        // Personal Best Tracking
+        function checkPersonalBest() {
+            if (score > personalBest && !newRecordAchieved) {
+                newRecordAchieved = true;
+            }
+        }
+
+        // Update game
+        function update() {
+            if (!gameActive || gamePaused) return;
+
+            frameCount++;
+            const groundY = canvas.height - groundHeight - player.height;
+
+            // Update player
+            player.velocityY += gravity;
+            player.y += player.velocityY;
+
+            // Ground collision
+            if (player.y >= groundY) {
+                player.y = groundY;
+                player.velocityY = 0;
+                player.jumping = false;
+                player.grounded = true;
+                player.hasDoubleJump = true; // Reset double jump on landing
+            } else {
+                player.grounded = false;
+            }
+
+            // Dynamic difficulty based on score - gets progressively harder approaching 500
+            let difficultyMultiplier = 1;
+            if (score < 500) {
+                // Gradual increase from score 0 to 500
+                // At score 0: multiplier = 1.0
+                // At score 500: multiplier = 2.5
+                difficultyMultiplier = 1 + (score / 500) * 1.5;
+            } else {
+                // Max difficulty at 500+
+                difficultyMultiplier = 2.5;
+            }
+
+            // Adjust spawn rate based on difficulty
+            const baseInterval = 100;
+            let adjustedInterval;
+            
+            if (score < 350) {
+                // Normal difficulty progression
+                adjustedInterval = Math.max(40, baseInterval / difficultyMultiplier);
+            } else {
+                // After 350, tighter spacing for increased challenge
+                // Minimum interval of 50 frames (reduced from 80)
+                adjustedInterval = Math.max(50, baseInterval / difficultyMultiplier);
+            }
+            
+            // No scaling by canvasScaleFactor - obstacle density should be consistent
+            // based on TIME (points), not screen space. Obstacle WIDTH is scaled in createObstacle()
+
+            // Create obstacles
+            obstacleTimer++;
+            if (obstacleTimer > adjustedInterval) {
+                createObstacle();
+                obstacleTimer = 0;
+                
+                // Package A: Spawn coins (30% base chance, 60% with MAGNET active - 2x multiplier)
+                const magnetActive = hasActivePowerUp('MAGNET');
+                const coinSpawnChance = magnetActive ? 0.60 : 0.30; // Magnet doubles spawn rate
+                if (Math.random() < coinSpawnChance) {
+                    spawnCoin();
+                }
+            }
+            
+            // Package A: Spawn power-ups - 2 per 100 points until score 350
+            const currentHundred = Math.floor(score / 100) * 100;
+            if (currentHundred !== lastHundredMilestone) {
+                lastHundredMilestone = currentHundred;
+                powerUpsSpawnedThisHundred = 0;
+                penaltiesSpawnedThisHundred = 0; // Reset penalty counter too
+            }
+            
+            // Spawn 2 power-ups per 100-point segment (no limit)
+            if (powerUpsSpawnedThisHundred < 2 && Math.random() < 0.02) {
+                powerUpsSpawnedThisHundred++;
+                if (score < 200 && Math.random() < 0.7) {
+                    // 70% chance of SPEED power-up early game
+                    spawnPowerUpType('SPEED');
+                } else {
+                    spawnPowerUp();
+                }
+            }
+            
+            // Spawn penalty objects: 1 per 100-point segment (controlled like power-ups)
+            // Never in 480-520 safe zone
+            const inSafeZone = (score >= 480 && score <= 520);
+            if (!inSafeZone && penaltiesSpawnedThisHundred < 1 && Math.random() < 0.015) {
+                penaltiesSpawnedThisHundred++;
+                spawnPenaltyObject();
+            }
+
+            // Package A: Update new systems
+            updateCoins();
+            updatePenaltyObjects(); // Update penalty objects
+            updatePenaltyTexts(); // Update floating -10 text
+            updatePowerUps();
+            
+            // Check and spawn magnet bonus coins
+            if (magnetBonusCoinsScheduled.length > 0) {
+                const currentTime = Date.now();
+                // Check if it's time to spawn the next scheduled coin
+                if (currentTime >= magnetBonusCoinsScheduled[0]) {
+                    spawnCoin();
+                    magnetBonusCoinsScheduled.shift(); // Remove the spawned coin from schedule
+                }
+            }
+            
+            createParticleTrail();
+            updateParticles();
+            updateScreenShake();
+            checkNearMiss();
+            checkPersonalBest();
+
+            // Tiered difficulty speed modifiers
+            let speedModifier;
+            if (score < 250) {
+                speedModifier = 0.85; // Easy/Learning (0-249)
+            } else if (score < 500) {
+                speedModifier = 0.95; // Normal (250-499)
+            } else {
+                speedModifier = 1.05; // Hard Mode (500+)
+            }
+
+            // Update skyline scrolling (parallax effect - 30% of game speed)
+            const skylineSpeed = gameSpeed * difficultyMultiplier * 0.3 * speedModifier;
+            skylineOffset -= skylineSpeed;
+            if (skylineOffset <= -800) {
+                skylineOffset = 0;
+            }
+
+            // Update obstacles - speed increases with difficulty
+            const currentSpeed = gameSpeed * difficultyMultiplier * speedModifier;
+            obstacles.forEach(obs => {
+                obs.x -= currentSpeed;
+            });
+
+            // Remove off-screen obstacles
+            obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+
+            // Collision detection
+            obstacles.forEach(obs => {
+                if (player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y) {
+                    // Package A: Check for shield protection
+                    if (!hasActivePowerUp('SHIELD')) {
+                        endGame(); // Obstacles end the game!
+                    }
+                }
+            });
+            
+            // Decrement penalty cooldown (used for penalty objects only)
+            if (penaltyCooldown > 0) {
+                penaltyCooldown--;
+            }
+
+            // Score and confetti celebration every 100 points
+            if (frameCount % 10 === 0) {
+                const oldScore = score;
+                score++;
+                document.getElementById('score').textContent = score;
+                
+                // Trigger CLOUD MONSTER transformation at 500
+                if (score >= 500 && !cloudMonsterTriggered) {
+                    cloudMonsterTriggered = true;
+                    cloudMonsterFlashActive = true;
+                    cloudMonsterFlashStart = Date.now();
+                    
+                    // Package A: Screen shake on transformation!
+                    triggerScreenShake(15, 5000);
+                    
+                    // After 5 seconds of flashing, enable aerial obstacles and speed boost
+                    setTimeout(() => {
+                        cloudMonsterFlashActive = false;
+                        aerialObstaclesEnabled = true;
+                        // Increase base game speed by 15% (works with 500+ speed tier of 1.05x)
+                        gameSpeed = gameSpeed * 1.15;
+                    }, 5000);
+                }
+                
+                // Check if we just crossed a 100-point milestone
+                if (score % 100 === 0 && score !== 0) {
+                    triggerConfetti();
+                }
+            }
+
+            // Update confetti particles
+            updateConfetti();
+        }
+
+        // Draw game
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Package A: Apply screen shake
+            ctx.save();
+            applyScreenShake();
+            
+            drawSkyline();
+            drawGround();
+            
+            // Package A: Draw new elements
+            drawParticles();
+            drawCoins();
+            drawPenaltyObjects(); // Draw -10 penalty objects
+            drawPowerUps();
+            
+            drawObstacles();
+            drawPlayer();
+            drawPenaltyTexts(); // Draw floating -10 text
+            drawConfetti(); // Draw confetti on top
+            
+            ctx.restore(); // Reset screen shake
+            
+            drawOnLogo(); // Draw On Running logo on canvas
+            
+            // CLOUD MONSTER flashing text (15 flashes in 5 seconds)
+            if (cloudMonsterFlashActive) {
+                const elapsed = Date.now() - cloudMonsterFlashStart;
+                const flashDuration = 5000; // 5 seconds
+                const flashCount = 15; // Changed from 10 to 15
+                const flashInterval = flashDuration / flashCount / 2; // Divide by 2 for on/off
+                
+                const currentFlash = Math.floor(elapsed / flashInterval);
+                const shouldShow = currentFlash % 2 === 0 && elapsed < flashDuration;
+                
+                if (shouldShow) {
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    // Responsive font size - smaller on mobile
+                    const fontSize = canvas.width < 768 ? Math.min(50, canvas.width * 0.12) : 80;
+                    ctx.font = `bold ${fontSize}px Orbitron, sans-serif`;
+                    
+                    // Gradient text effect
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                    gradient.addColorStop(0, '#00FFD1');
+                    gradient.addColorStop(0.5, '#ffffff');
+                    gradient.addColorStop(1, '#FF006B');
+                    ctx.fillStyle = gradient;
+                    
+                    // Massive glow effect
+                    ctx.shadowBlur = 50;
+                    ctx.shadowColor = '#00FFD1';
+                    
+                    ctx.fillText('CLOUD MONSTER', canvas.width / 2, canvas.height / 2);
+                    
+                    // Second layer for extra intensity
+                    ctx.shadowColor = '#FF006B';
+                    ctx.fillText('CLOUD MONSTER', canvas.width / 2, canvas.height / 2);
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // Package A: Draw pause overlay
+            if (gamePaused) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#00FFD1';
+                ctx.font = 'bold 60px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#00FFD1';
+                ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+                ctx.font = 'bold 20px Oswald';
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 10;
+                ctx.fillText('Press ESC or P to resume', canvas.width / 2, canvas.height / 2 + 60);
+                ctx.restore();
+            }
+            
+        }
+
+        // Game loop
+        function gameLoop() {
+            try {
+                update();
+                draw();
+                if (gameActive) {
+                    requestAnimationFrame(gameLoop);
+                }
+            } catch (error) {
+                console.error('Error in game loop:', error);
+                console.error('Stack trace:', error.stack);
+                gameActive = false;
+                
+                // Show error to user
+                alert('Game error: ' + error.message + '\nCheck console for details.');
+            }
+        }
+
+        // Jump
+        function jump() {
+            if (!gameActive) return;
+            
+            // First jump - from ground
+            if (player.grounded) {
+                player.velocityY = -18;
+                player.jumping = true;
+                player.hasDoubleJump = true; // Reset double jump when jumping from ground
+            }
+            // Second jump - double jump in air
+            else if (player.hasDoubleJump && !player.grounded) {
+                player.velocityY = -16; // Slightly weaker than first jump
+                player.hasDoubleJump = false; // Use up double jump
+                
+                // Visual feedback - particle burst
+                for (let i = 0; i < 8; i++) {
+                    particles.push({
+                        x: player.x + player.width / 2,
+                        y: player.y + player.height,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: Math.random() * 3,
+                        life: 20,
+                        color: '#00FFD1',
+                        size: 6
+                    });
+                }
+            }
+        }
+
+        // Controls
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                // If game over, restart the game
+                if (!gameActive && !document.getElementById('gameOverScreen').classList.contains('hidden')) {
+                    restartGame();
+                } else {
+                    jump();
+                }
+            }
+            // Package A: Pause with ESC or P key
+            if ((e.code === 'Escape' || e.code === 'KeyP') && gameActive) {
+                e.preventDefault();
+                togglePause();
+            }
+        });
+
+        canvas.addEventListener('click', jump);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            // If game over, restart the game
+            if (!gameActive && !document.getElementById('gameOverScreen').classList.contains('hidden')) {
+                restartGame();
+            } else {
+                jump();
+            }
+        });
+
+        // Start game
+        function startGame() {
+            score = 0;
+            gameSpeed = 5.6; // 20% slower than 7
+            frameCount = 0;
+            obstacles = [];
+            obstacleTimer = 0;
+            player.y = canvas.height - groundHeight - player.height;
+            player.velocityY = 0;
+            
+            // Reset penalty system
+            penaltyCooldown = 0;
+            penaltyObjects = [];
+            penaltyTexts = [];
+            magnetBonusCoinsScheduled = []; // Reset magnet bonus coins
+            
+            // Reset cloud monster transformation state
+            cloudMonsterTriggered = false;
+            cloudMonsterFlashActive = false;
+            aerialObstaclesEnabled = false;
+            skylineOffset = 0;
+            
+            // Package A: Reset new systems
+            gamePaused = false;
+            newRecordAchieved = false;
+            powerUps = [];
+            activePowerUps = [];
+            powerUpsSpawnedThisHundred = 0;
+            penaltiesSpawnedThisHundred = 0; // Reset penalty counter
+            lastHundredMilestone = 0;
+            coins = [];
+            totalCoinsCollected = 0;
+            particles = [];
+            screenShake = { active: false, intensity: 0, duration: 0, elapsed: 0 };
+            nearMissJustAwarded = false;
+            
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('score').textContent = '0';
+            
+            gameActive = true;
+            gameLoop();
+        }
+
+        // End game
+        function endGame() {
+            gameActive = false;
+            document.getElementById('finalScore').textContent = score;
+            
+            // Package A: Check and update personal best
+            if (score > personalBest) {
+                personalBest = score;
+                localStorage.setItem('fnl-personal-best', personalBest);
+                document.getElementById('newRecordDisplay').style.display = 'block';
+            } else {
+                document.getElementById('newRecordDisplay').style.display = 'none';
+            }
+            
+            document.getElementById('personalBestScore').textContent = personalBest;
+            document.getElementById('coinsCollected').textContent = totalCoinsCollected;
+            
+            // Auto-submit score with username from start
+            const scores = loadScores();
+            scores.push({
+                username: playerUsername,
+                score: score,
+                timestamp: new Date().toISOString()
+            });
+            saveScores(scores);
+            
+            // Update leaderboard display
+            displayLeaderboard();
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+        }
+
+        // Share score function
+        function shareScore() {
+            generateShareImage(score);
+            
+            // Show success message
+            const shareButton = document.getElementById('shareButton');
+            const originalText = shareButton.innerHTML;
+            shareButton.innerHTML = '✓ IMAGE DOWNLOADED!';
+            shareButton.style.background = 'linear-gradient(135deg, #00FF00 0%, #00AA00 100%)';
+            
+            setTimeout(() => {
+                shareButton.innerHTML = originalText;
+                shareButton.style.background = '';
+            }, 3000);
+        }
+
+        // Restart game
+        function restartGame() {
+            startGame();
+        }
+
+        // Profanity filter - basic list (expand as needed)
+        // Load scores from localStorage
+        function loadScores() {
+            const scores = localStorage.getItem('fnl_scores');
+            return scores ? JSON.parse(scores) : [];
+        }
+
+        // Save scores to localStorage
+        function saveScores(scores) {
+            localStorage.setItem('fnl_scores', JSON.stringify(scores));
+        }
+
+        // Display leaderboard
+        function displayLeaderboard() {
+            const scores = loadScores();
+            scores.sort((a, b) => b.score - a.score);
+            const top10 = scores.slice(0, 10);
+            
+            const leaderboard = document.getElementById('leaderboard');
+            if (top10.length === 0) {
+                leaderboard.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">No scores yet. Be the first!</div>';
+                return;
+            }
+            
+            leaderboard.innerHTML = top10.map((entry, index) => {
+                let borderClass = '';
+                if (index === 0) borderClass = 'style="border: 2px solid #FFD700; background: rgba(255, 215, 0, 0.1);"';
+                else if (index === 1) borderClass = 'style="border: 2px solid #C0C0C0; background: rgba(192, 192, 192, 0.1);"';
+                else if (index === 2) borderClass = 'style="border: 2px solid #CD7F32; background: rgba(205, 127, 50, 0.1);"';
+                
+                return `
+                <div class="score-entry" ${borderClass}>
+                    <span class="rank">#${index + 1}</span>
+                    <span class="username">${escapeHtml(entry.username)}</span>
+                    <span class="points">${entry.score}</span>
+                </div>
+            `}).join('');
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Submit score
+        // Initialize
+        createClubLights();
+        player.y = canvas.height - groundHeight - player.height;
+        // Initialize leaderboard with sample data if empty (first time users)
+        function initializeLeaderboard() {
+            const existingScores = loadScores();
+            if (existingScores.length === 0) {
+                const sampleScores = [
+                    { username: 'Runner1', score: 850, timestamp: new Date().toISOString() },
+                    { username: 'NeonStar', score: 720, timestamp: new Date().toISOString() },
+                    { username: 'CloudMstr', score: 650, timestamp: new Date().toISOString() },
+                    { username: 'JumpKing', score: 580, timestamp: new Date().toISOString() },
+                    { username: 'BeatDrop', score: 520, timestamp: new Date().toISOString() }
+                ];
+                saveScores(sampleScores);
+            }
+        }
+        
+        // Initialize
+        initializeLeaderboard();
+        displayLeaderboard();
+
+        // Add Enter key listener to username input (mobile + desktop)
+        const usernameInput = document.getElementById('startUsernameInput');
+        usernameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                validateAndShowHowToPlay();
+            }
+        });
+        usernameInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                validateAndShowHowToPlay();
+            }
+        });
+
+        // Add PLAY button listeners
+        const playButton = document.getElementById('playButton');
+        if (playButton) {
+            const playButtonHandler = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                validateAndShowHowToPlay();
+            };
+            
+            playButton.addEventListener('click', playButtonHandler);
+            playButton.addEventListener('touchstart', playButtonHandler, { passive: false });
+        }
+
+        // Add LET'S GO button listeners
+        const letsGoButton = document.getElementById('letsGoButton');
+        if (letsGoButton) {
+            const startGameFromTutorial = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeHowToPlay();
+            };
+            
+            letsGoButton.addEventListener('click', startGameFromTutorial);
+            letsGoButton.addEventListener('touchstart', startGameFromTutorial, { passive: false });
+        }
+
+        // Add Enter key listener for How to Play modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const modal = document.getElementById('howToPlayModal');
+                if (modal && modal.style.display === 'flex') {
+                    closeHowToPlay();
+                }
+            }
+        });
+
+        // Validate username and show how to play
+        function validateAndShowHowToPlay() {
+            const usernameInput = document.getElementById('startUsernameInput');
+            const username = usernameInput.value.trim();
+            const errorDiv = document.getElementById('usernameError');
+            
+            if (username.length === 0) {
+                errorDiv.textContent = 'Please enter your name';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (containsProfanity(username)) {
+                errorDiv.textContent = 'Please enter a valid name (no profanity)';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Valid username
+            playerUsername = username;
+            errorDiv.style.display = 'none';
+            showHowToPlay();
+        }
+
+        function showHowToPlay() {
+            const startScreen = document.getElementById('startScreen');
+            const modal = document.getElementById('howToPlayModal');
+            const canvas = document.getElementById('gameCanvas');
+            
+            // Hide start screen
+            startScreen.classList.add('hidden');
+            startScreen.style.display = 'none';
+            
+            // Lower canvas z-index temporarily
+            canvas.style.zIndex = '-1';
+            
+            // Show modal with multiple techniques for mobile
+            modal.style.display = 'flex';
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+            modal.style.zIndex = '10000';
+            modal.style.transform = 'translateZ(0)';
+            modal.style.pointerEvents = 'auto';
+            modal.style.background = 'rgba(0, 0, 0, 0.95)';
+            
+            // Always start on page 1
+            showHowToPlayPage1();
+            
+            // Force a reflow to ensure CSS is applied (mobile fix)
+            modal.offsetHeight;
+        }
+        
+        function showHowToPlayPage1() {
+            document.getElementById('howToPlayPage1').style.display = 'block';
+            document.getElementById('howToPlayPage2').style.display = 'none';
+        }
+        
+        function showHowToPlayPage2() {
+            document.getElementById('howToPlayPage1').style.display = 'none';
+            document.getElementById('howToPlayPage2').style.display = 'block';
+        }
+
+        function closeHowToPlay() {
+            document.getElementById('howToPlayModal').style.display = 'none';
+            document.getElementById('gameCanvas').style.zIndex = ''; // Restore canvas z-index
+            startGame();
+        }
+        
+        function showHowToPlayFromGameOver() {
+            // Hide game over screen
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            // Show tutorial modal
+            showHowToPlay();
+        }
+
+        // Share Image Generation
+        function generateShareImage(playerScore) {
+            const shareCanvas = document.getElementById('shareCanvas');
+            const ctx = shareCanvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#0a0a1f';
+            ctx.fillRect(0, 0, 1080, 1920);
+            
+            // Gradient overlay
+            const gradient = ctx.createLinearGradient(0, 0, 0, 1920);
+            gradient.addColorStop(0, '#1a0a3e');
+            gradient.addColorStop(0.5, '#0d0520');
+            gradient.addColorStop(1, '#1a1a2e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1080, 1920);
+            
+            // On logo at top right (clean O + n, no diagonal slash, black fill for invert)
+            const onLogoImg = new Image();
+            onLogoImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MTIgMTc4OSIgd2lkdGg9IjkxMiIgaGVpZ2h0PSIxNzg5Ij4KPHN0eWxlPi5zaHAwIHsgZmlsbDogIzAwMDAwMCB9PC9zdHlsZT4KPHBhdGggY2xhc3M9InNocDAiIGQ9Ik00MjAuOSA3MjAuMkMyOTUuNzggNzIyLjI4IDE5MS42NCA2MTUuMzUgMTkxLjY0IDQ5MS42M0MxOTEuNjQgMzcwLjcgMjkyLjI5IDI1OC44NyA0MjcuMTkgMjYyLjM2QzU0Ni43MSAyNjUuODcgNjUyLjk1IDM2My43MiA2NDkuNDYgNDk4LjYyQzY0Ni42NyA2MjAuMjQgNTQzLjkzIDcyMS42IDQyMC45IDcyMC4yWk00MjAuNSA2OUMxODguMyA2OSAwIDI1Ny4zIDAgNDg5LjVDMCA3MjEuNyAxODguMyA5MTAgNDIwLjUgOTEwQzY1Mi43IDkxMCA4NDEgNzIxLjcgODQxIDQ4OS41Qzg0MSAyNTcuMyA2NTIuNyA2OSA0MjAuNSA2OVoiLz4KPHBhdGggY2xhc3M9InNocDAiIGQ9Ik04MjYuMjYgMTQzMi40NUM4MjYuOTYgMTU0NS42OCA4MjYuMjYgMTY1OS42MSA4MjYuMjYgMTc3Mi44NEw4MjYuMjYgMTc4OC4yMkw2MjMuNTcgMTc4OC4yMkw2MjMuNTcgMTc3NC4yNEM2MjMuNTcgMTY1NS40MiA2MjQuMjcgMTUzNi42MSA2MjMuNTcgMTQxNy43N0M2MjMuNTcgMTM1NS41NiA2MDEuOSAxMzAxLjA0IDU1Ni40NyAxMjU3LjdDNTI2LjQxIDEyMjkuMDUgNDkwLjA3IDEyMTIuMjcgNDQ4LjEzIDEyMDYuNjhDMzkzLjYxIDExOTguOTkgMzQzLjk4IDEyMTIuMjcgMjk5Ljk1IDEyNDUuMTJDMjU1LjkxIDEyNzguNjcgMjMwLjA1IDEzMjQuMTEgMjIxLjY3IDEzNzcuOTJDMjE3LjQ3IDE0MDMuNzkgMjE2Ljc3IDE0MzAuMzUgMjE2Ljc3IDE0NTYuOTFDMjE2LjA4IDE1NjIuNDUgMjE2Ljc3IDE2NjcuMyAyMTYuNzcgMTc3Mi44NEwyMTYuNzcgMTc4Ny41MkwxNS41IDE3ODcuNTJMMTUuNSAxNzc0LjI0QzE1LjUgMTY0Ni4zMyAxNC4xIDE1MTcuNzMgMTYuMiAxMzg5LjgyQzE3LjYgMTMyMi4wMiAzOS4yNyAxMjU3LjcxIDc0LjkxIDExOTlDMTM0LjMyIDExMDEuMTUgMjE4LjkgMTAzOC4yNCAzMzAuMDIgMTAxMi4zOEMzNjQuMjcgMTAwNC42OSA0MDEuMzIgMTAwMS4yIDQzNi45NiAxMDAyLjZDNTQ4LjEgMTAwNy40OSA2NDMuMTUgMTA1MS41MiA3MTguNjQgMTEzNC43Qzc3Mi40NiAxMTk0LjgxIDgwNi43MSAxMjY0LjcxIDgxOC41OSAxMzQ1LjA5QzgyMy40NyAxMzc0LjQ0IDgyNi4yOCAxNDAzLjc4IDgyNi4yOCAxNDMyLjQ1Ii8+Cjwvc3ZnPgo=';
+            
+            // Wait for logo to load before drawing
+            onLogoImg.onload = function() {
+                // Draw logo (inverted colors for visibility on dark background)
+                ctx.filter = 'invert(1)';
+                ctx.drawImage(onLogoImg, 850, 80, 150, 150);
+                ctx.filter = 'none';
+                
+                // Title
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 100px Orbitron, sans-serif';
+                
+                // FRIDAY (white)
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#ffffff';
+                ctx.fillText('FRIDAY', 540, 400);
+                
+                // NIGHT (white)
+                ctx.fillText('NIGHT', 540, 520);
+                
+                // LIGHTS (cyan)
+                ctx.fillStyle = '#00FFD1';
+                ctx.fillText('LIGHTS', 540, 640);
+                
+                ctx.shadowBlur = 0;
+                
+                // Username
+                ctx.fillStyle = '#FFFF00';
+                ctx.font = 'bold 50px Oswald, sans-serif';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#FFFF00';
+                ctx.fillText(playerUsername.toUpperCase(), 540, 800);
+                ctx.shadowBlur = 0;
+                
+                // Score section
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 60px Oswald, sans-serif';
+                ctx.fillText('MY SCORE', 540, 950);
+                
+                ctx.fillStyle = '#00FFD1';
+                ctx.font = 'bold 200px Orbitron, sans-serif';
+                ctx.shadowBlur = 50;
+                ctx.shadowColor = '#00FFD1';
+                ctx.fillText(playerScore, 540, 1200);
+                
+                ctx.shadowBlur = 0;
+                
+                // Challenge text
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 50px Oswald, sans-serif';
+                ctx.fillText('VIBE MERCHANT RUN', 540, 1400);
+                
+                // Instagram handles
+                ctx.fillStyle = '#FF006B';
+                ctx.font = '40px Oswald, sans-serif';
+                ctx.fillText('@onrunning', 540, 1500);
+                ctx.fillText('@fridaynightlights.run', 540, 1560);
+                
+                // Convert to blob and download
+                shareCanvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `fnl-score-${playerScore}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            };
+        }
+
+        // Allow Enter key to submit score
+        
+        // iOS Mobile optimizations - prevent bounce scrolling and gestures
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+        
+        // Prevent double-tap zoom on iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Prevent iOS Safari pull-to-refresh
+        let startY = 0;
+        document.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].pageY;
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', function(e) {
+            const y = e.touches[0].pageY;
+            // Prevent pull-to-refresh when scrolling up at the top
+            if (y > startY && window.pageYOffset === 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Global error handler for debugging
+        window.addEventListener('error', function(event) {
+            console.error('Global error caught:');
+            console.error('Message:', event.message);
+            console.error('Filename:', event.filename);
+            console.error('Line:', event.lineno);
+            console.error('Column:', event.colno);
+            console.error('Error object:', event.error);
+            
+            // Display error on screen for mobile debugging
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(255,0,0,0.9);color:white;padding:20px;border-radius:10px;z-index:99999;max-width:80%;font-size:12px;';
+            errorDiv.innerHTML = `
+                <strong>Error Detected:</strong><br>
+                ${event.message}<br>
+                Line: ${event.lineno} Col: ${event.colno}<br>
+                <button onclick="this.parentElement.remove()" style="margin-top:10px;padding:5px 10px;">Close</button>
+            `;
+            document.body.appendChild(errorDiv);
+        });
+        
+        // Catch unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+    </script>
+</body>
