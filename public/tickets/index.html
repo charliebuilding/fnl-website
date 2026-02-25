@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Your Tickets — Friday Night Lights</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00FFD1;
+    --magenta: #FF006B;
+    --yellow: #FFFF00;
+    --black: #000000;
+    --dark: #0A0A0A;
+    --dark2: #111111;
+    --dark3: #1A1A1A;
+    --border: #2A2A2A;
+    --text: #FFFFFF;
+    --text-muted: #888888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1,h2,h3,h4,h5 { font-family: 'Space Grotesk', sans-serif; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(0,0,0,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.5px; }
+  .nav-logo span { color: var(--cyan); }
+  .nav-back { color: var(--text-muted); text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; transition: color 0.2s; }
+  .nav-back:hover { color: var(--cyan); }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 5rem 2rem 3rem;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse at center, rgba(0,255,209,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--cyan);
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -2px; margin-bottom: 1rem;
+  }
+  .hero h1 em { font-style: normal; color: var(--cyan); }
+  .hero p { font-size: 1.125rem; color: var(--text-muted); max-width: 480px; margin: 0 auto; }
+
+  /* EVENTS GRID */
+  .events-section { padding: 3rem 2rem 6rem; max-width: 1100px; margin: 0 auto; }
+  .events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+
+  /* EVENT CARD */
+  .event-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.3s, border-color 0.3s;
+    position: relative;
+  }
+  .event-card:hover { transform: translateY(-4px); }
+  .event-card-header {
+    padding: 2rem 2rem 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .event-card-glow {
+    position: absolute; top: -50%; right: -30%;
+    width: 200px; height: 200px; border-radius: 50%;
+    filter: blur(60px); opacity: 0.25; pointer-events: none;
+  }
+  .event-date-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    padding: 0.3rem 0.75rem; border-radius: 999px;
+    margin-bottom: 1rem;
+  }
+  .event-name {
+    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;
+    margin-bottom: 0.25rem; position: relative;
+  }
+  .event-location { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; position: relative; }
+  .event-description { font-size: 0.875rem; color: #aaa; line-height: 1.6; position: relative; margin-bottom: 1.5rem; }
+  .event-countdown {
+    display: flex; gap: 1rem;
+    font-family: 'Space Grotesk', sans-serif;
+    position: relative;
+  }
+  .countdown-unit { text-align: center; }
+  .countdown-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+  .countdown-label { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+
+  /* TICKET TIERS PREVIEW */
+  .event-tiers {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+  }
+  .tier-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .tier-row:last-child { border-bottom: none; }
+  .tier-info { display: flex; align-items: center; gap: 0.75rem; }
+  .tier-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tier-name { font-weight: 600; font-size: 0.9rem; }
+  .tier-right { text-align: right; }
+  .tier-price { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem; }
+  .tier-avail { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+  .tier-avail.low { color: var(--yellow); }
+  .tier-avail.sold-out { color: var(--magenta); }
+
+  /* CTA */
+  .event-cta {
+    padding: 1.25rem 2rem 1.75rem;
+  }
+  .btn-book {
+    display: block; width: 100%;
+    padding: 1rem;
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
+    text-align: center; text-decoration: none;
+    border-radius: 10px; border: none; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: -0.2px;
+  }
+  .btn-book:hover { opacity: 0.9; transform: scale(0.995); }
+  .btn-book:active { transform: scale(0.99); }
+
+  /* LOADING SKELETON */
+  .skeleton { animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .skeleton-block { background: var(--dark3); border-radius: 4px; }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    overflow-y: auto;
+    padding: 2rem 1rem;
+  }
+  .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+  .modal {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%; max-width: 600px;
+    position: relative;
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 2rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .modal-event-name { font-size: 1.25rem; font-weight: 800; }
+  .modal-event-meta { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .modal-close {
+    background: var(--dark3); border: 1px solid var(--border);
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-muted); font-size: 1.2rem;
+    transition: color 0.2s, background 0.2s; flex-shrink: 0;
+  }
+  .modal-close:hover { color: var(--text); background: var(--border); }
+  .modal-body { padding: 1.5rem 2rem; }
+  .modal-footer {
+    padding: 1.25rem 2rem 1.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* STEPS */
+  .steps { display: flex; gap: 0; margin-bottom: 2rem; }
+  .step {
+    flex: 1; text-align: center; padding: 0.75rem 0.5rem;
+    font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+    border-bottom: 2px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+  }
+  .step.active { border-color: var(--cyan); color: var(--cyan); }
+  .step.done { border-color: rgba(0,255,209,0.3); color: rgba(0,255,209,0.6); }
+
+  .step-pane { display: none; }
+  .step-pane.active { display: block; }
+
+  /* TIER SELECTOR */
+  .tier-options { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+  .tier-option {
+    border: 2px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.25rem;
+    cursor: pointer; transition: all 0.2s; position: relative;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .tier-option:hover { border-color: rgba(255,255,255,0.2); }
+  .tier-option.selected { border-color: var(--cyan); background: rgba(0,255,209,0.05); }
+  .tier-option.sold-out { opacity: 0.5; cursor: not-allowed; }
+  .tier-option input[type=radio] { display: none; }
+  .tier-opt-left { flex: 1; }
+  .tier-opt-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; }
+  .tier-badge { font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 999px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  .tier-opt-desc { font-size: 0.8rem; color: var(--text-muted); }
+  .tier-opt-avail { font-size: 0.75rem; margin-top: 0.3rem; }
+  .tier-opt-price { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.25rem; text-align: right; }
+  .tier-opt-price small { font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; }
+
+  /* QUANTITY */
+  .quantity-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem; background: var(--dark3); border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .qty-label { font-weight: 600; }
+  .qty-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.1rem; }
+  .qty-controls { display: flex; align-items: center; gap: 0.75rem; }
+  .qty-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--border); border: 1px solid var(--dark3);
+    color: var(--text); font-size: 1.25rem; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .qty-btn:hover { background: #333; }
+  .qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  #qty-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.25rem; min-width: 2rem; text-align: center; }
+
+  /* PROMO */
+  .promo-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .promo-input {
+    flex: 1; background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.75rem 1rem;
+    color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    transition: border-color 0.2s;
+  }
+  .promo-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .promo-input.valid { border-color: var(--cyan); }
+  .promo-input.invalid { border-color: var(--magenta); }
+  .btn-promo {
+    background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.75rem 1.25rem;
+    color: var(--text); font-weight: 600; font-size: 0.875rem; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-promo:hover { background: #222; }
+  .promo-msg { font-size: 0.8rem; margin-top: 0.4rem; }
+  .promo-msg.ok { color: var(--cyan); }
+  .promo-msg.err { color: var(--magenta); }
+
+  /* ORDER SUMMARY */
+  .order-summary {
+    background: var(--dark3); border-radius: 12px; padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .summary-row { display: flex; justify-content: space-between; font-size: 0.875rem; padding: 0.3rem 0; }
+  .summary-row.total { font-weight: 700; font-size: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); margin-top: 0.5rem; }
+  .summary-row .discount { color: var(--cyan); }
+
+  /* RUNNER FORM */
+  .runner-tabs {
+    display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .runner-tab {
+    padding: 0.4rem 0.85rem; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-muted); transition: all 0.2s;
+  }
+  .runner-tab.active { background: var(--cyan); color: var(--black); border-color: var(--cyan); }
+  .runner-form-pane { display: none; }
+  .runner-form-pane.active { display: block; }
+  .runner-form-title { font-weight: 700; margin-bottom: 1rem; font-size: 0.95rem; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .form-input {
+    background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.7rem 0.9rem;
+    color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .form-input.error { border-color: var(--magenta); }
+  .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.9rem center; padding-right: 2.5rem; }
+  .ec-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .ec-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
+
+  /* BUTTONS */
+  .btn-primary {
+    display: block; width: 100%; padding: 1rem;
+    background: var(--cyan); color: var(--black);
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
+    border: none; border-radius: 10px; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s; letter-spacing: -0.2px;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    display: block; width: 100%; padding: 0.875rem;
+    background: transparent; color: var(--text-muted);
+    font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500;
+    border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+    transition: color 0.2s, border-color 0.2s; margin-top: 0.75rem;
+  }
+  .btn-secondary:hover { color: var(--text); border-color: #444; }
+  .btn-waitlist {
+    display: block; width: 100%; padding: 0.875rem;
+    background: transparent; color: var(--text);
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; font-weight: 600;
+    border: 1px solid var(--magenta); color: var(--magenta); border-radius: 10px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-waitlist:hover { background: rgba(255,0,107,0.08); }
+
+  /* ERROR */
+  .error-msg { background: rgba(255,0,107,0.1); border: 1px solid rgba(255,0,107,0.3); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--magenta); margin-bottom: 1rem; display: none; }
+  .error-msg.show { display: block; }
+
+  /* SPINNER */
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.3); border-top-color: var(--black); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* FOOTER */
+  footer { text-align: center; padding: 3rem 2rem; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); }
+  footer a { color: var(--text-muted); }
+
+  /* WAITLIST MODAL */
+  .waitlist-modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1100;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 2rem;
+  }
+  .waitlist-modal-overlay.open { display: flex; }
+  .waitlist-modal { background: var(--dark2); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; max-width: 440px; width: 100%; }
+  .waitlist-modal h3 { margin-bottom: 0.5rem; }
+  .waitlist-modal p { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; }
+
+  @media (max-width: 500px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .modal-body, .modal-header, .event-cta, .modal-footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">friday night <span>lights</span></div>
+  <a href="/" class="nav-back">← Back to site</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">2026 Race Season</div>
+  <h1>Run the Night.<br><em>Own the City.</em></h1>
+  <p>Three closed-road races. Neon energy. 50,000+ runners. The UK's Healthiest Night Out.</p>
+</section>
+
+<section class="events-section">
+  <div class="events-grid" id="events-grid">
+    <!-- Cards injected by JS -->
+    <div class="event-card skeleton-block" style="height:520px;border-radius:16px;"></div>
+    <div class="event-card skeleton-block" style="height:520px;border-radius:16px;opacity:0.7;"></div>
+    <div class="event-card skeleton-block" style="height:520px;border-radius:16px;opacity:0.4;"></div>
+  </div>
+</section>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-event-name" id="modal-event-name">Event Name</div>
+        <div class="modal-event-meta" id="modal-event-meta">Date · Location</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="steps">
+        <div class="step active" id="step-btn-1" onclick="goToStep(1)">1. Tickets</div>
+        <div class="step" id="step-btn-2">2. Runners</div>
+        <div class="step" id="step-btn-3">3. Checkout</div>
+      </div>
+
+      <!-- STEP 1: Ticket Selection -->
+      <div class="step-pane active" id="step-1">
+        <div class="tier-options" id="tier-options"><!-- Injected --></div>
+
+        <div class="quantity-row">
+          <div>
+            <div class="qty-label">Number of runners</div>
+            <div class="qty-sub">Up to 6 per booking. Group discount for 4+</div>
+          </div>
+          <div class="qty-controls">
+            <button class="qty-btn" id="qty-minus" onclick="changeQty(-1)">−</button>
+            <span id="qty-display">1</span>
+            <button class="qty-btn" id="qty-plus" onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+
+        <div class="promo-row">
+          <input type="text" class="promo-input" id="promo-input" placeholder="PROMO CODE" autocomplete="off">
+          <button class="btn-promo" onclick="applyPromo()">Apply</button>
+        </div>
+        <div class="promo-msg" id="promo-msg"></div>
+      </div>
+
+      <!-- STEP 2: Runner Details -->
+      <div class="step-pane" id="step-2">
+        <div class="runner-tabs" id="runner-tabs"><!-- Injected --></div>
+        <div id="runner-forms"><!-- Injected --></div>
+      </div>
+
+      <!-- STEP 3: Review -->
+      <div class="step-pane" id="step-3">
+        <div class="order-summary" id="order-summary"><!-- Injected --></div>
+        <div id="lead-email-group" class="form-group" style="margin-bottom:1.25rem;">
+          <label class="form-label">Confirmation email</label>
+          <input type="email" class="form-input" id="lead-email" placeholder="your@email.com">
+          <small style="color:var(--text-muted);font-size:0.75rem;margin-top:0.25rem;">We'll send your ticket confirmation here.</small>
+        </div>
+        <div class="error-msg" id="checkout-error"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div id="step-1-footer">
+        <button class="btn-primary" onclick="goToStep(2)" id="btn-next-1">Choose Runners →</button>
+      </div>
+      <div id="step-2-footer" style="display:none;">
+        <button class="btn-primary" onclick="goToStep(3)">Review Order →</button>
+        <button class="btn-secondary" onclick="goToStep(1)">← Back</button>
+      </div>
+      <div id="step-3-footer" style="display:none;">
+        <button class="btn-primary" onclick="submitCheckout()" id="btn-checkout">
+          Pay Securely via Stripe →
+        </button>
+        <button class="btn-secondary" onclick="goToStep(2)">← Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WAITLIST MODAL -->
+<div class="waitlist-modal-overlay" id="waitlist-modal">
+  <div class="waitlist-modal">
+    <h3>Join the Waitlist</h3>
+    <p id="waitlist-modal-desc">We'll email you if a spot opens up for this ticket.</p>
+    <div class="form-group" style="margin-bottom:0.75rem;">
+      <label class="form-label">Full Name</label>
+      <input type="text" class="form-input" id="waitlist-name" placeholder="Your name">
+    </div>
+    <div class="form-group" style="margin-bottom:1.25rem;">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="waitlist-email" placeholder="your@email.com">
+    </div>
+    <div class="error-msg" id="waitlist-error"></div>
+    <div id="waitlist-success" style="display:none;color:var(--cyan);font-size:0.9rem;margin-bottom:1rem;">✓ You're on the waitlist! We'll be in touch.</div>
+    <button class="btn-primary" onclick="submitWaitlist()">Join Waitlist</button>
+    <button class="btn-secondary" onclick="closeWaitlist()">Cancel</button>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 Friday Night Lights · Backed by London Marathon Events</p>
+  <p style="margin-top:0.5rem;"><a href="mailto:hello@fridaynightlights.co.uk">hello@fridaynightlights.co.uk</a></p>
+</footer>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────
+const EVENTS = {
+  'battersea-5k': {
+    id: 'battersea-5k', name: 'FNL Battersea Park 5K', shortName: 'Battersea 5K',
+    date: 'April 24, 2026', dateIso: '2026-04-24', time: '20:00',
+    location: 'Battersea Park, London', description: "The flagship sunset 5K through iconic Battersea Park. Closed roads, neon vibes, and London's best running crowd.",
+    emoji: '🌇', neonColor: '#00FFD1',
+    tiers: [
+      { id: 'early-bird', name: 'Early Bird', price: 1499, description: "Limited early access. Grab it before it's gone.", totalCapacity: 500, color: '#FFFF00' },
+      { id: 'general', name: 'General Entry', price: 1999, description: 'Includes finisher medal & event tee.', totalCapacity: 4200, color: '#00FFD1' },
+      { id: 'vip', name: 'VIP Experience', price: 4999, description: 'Priority pen, VIP tent, welcome drinks & premium race pack.', totalCapacity: 300, color: '#FF006B' },
+    ]
+  },
+  'hackney-10k': {
+    id: 'hackney-10k', name: 'Hackney Quarter 10K', shortName: 'Hackney 10K',
+    date: 'May 14, 2026', dateIso: '2026-05-14', time: '20:00',
+    location: 'Victoria Park, Hackney, London', description: "East London's biggest closed-road night race. 10K of pure energy through Hackney's iconic streets.",
+    emoji: '⚡', neonColor: '#FF006B',
+    tiers: [
+      { id: 'early-bird', name: 'Early Bird', price: 1799, description: "Limited early access. Grab it before it's gone.", totalCapacity: 800, color: '#FFFF00' },
+      { id: 'general', name: 'General Entry', price: 2499, description: 'Includes finisher medal & event tee.', totalCapacity: 6800, color: '#00FFD1' },
+      { id: 'vip', name: 'VIP Experience', price: 5999, description: 'Priority pen, VIP tent, welcome drinks & premium race pack.', totalCapacity: 400, color: '#FF006B' },
+    ]
+  },
+  'run-the-wharf': {
+    id: 'run-the-wharf', name: 'Run The Wharf 5K', shortName: 'Run The Wharf',
+    date: 'September 3, 2026', dateIso: '2026-09-03', time: '20:00',
+    location: 'Canary Wharf, London', description: "London's most spectacular night 5K. Neon lights reflected in the docklands water.",
+    emoji: '🌊', neonColor: '#FFFF00',
+    tiers: [
+      { id: 'early-bird', name: 'Early Bird', price: 1499, description: "Limited early access.", totalCapacity: 600, color: '#FFFF00' },
+      { id: 'general', name: 'General Entry', price: 1999, description: 'Includes finisher medal & event tee.', totalCapacity: 5100, color: '#00FFD1' },
+      { id: 'vip', name: 'VIP Experience', price: 4999, description: 'Priority pen, VIP tent, welcome drinks & premium race pack.', totalCapacity: 300, color: '#FF006B' },
+    ]
+  }
+};
+
+const MAX_QTY = 6;
+const GROUP_THRESHOLD = 4;
+const GROUP_DISCOUNT = 10;
+
+// ─── STATE ────────────────────────────────────────────────────────────
+let stats = {};
+let currentEvent = null;
+let currentStep = 1;
+let selectedTierId = null;
+let quantity = 1;
+let promoCode = null;
+let promoValid = false;
+let waitlistTarget = null;
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('/api/tickets/stats');
+    stats = await res.json();
+  } catch(e) {
+    console.warn('Could not load stats, using defaults');
+  }
+  renderEventCards();
+}
+
+// ─── COUNTDOWN ────────────────────────────────────────────────────────
+function getCountdown(dateStr) {
+  const target = new Date(dateStr + 'T20:00:00');
+  const now = new Date();
+  const diff = target - now;
+  if (diff <= 0) return null;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return { days, hours, mins };
+}
+
+function fmtPrice(pence) { return `£${(pence/100).toFixed(2)}`; }
+
+// ─── RENDER CARDS ─────────────────────────────────────────────────────
+function renderEventCards() {
+  const grid = document.getElementById('events-grid');
+  grid.innerHTML = '';
+
+  for (const event of Object.values(EVENTS)) {
+    const eventStats = stats[event.id];
+    const countdown = getCountdown(event.dateIso);
+    const allSoldOut = event.tiers.every(t => eventStats?.tiers[t.id]?.soldOut);
+
+    const tiersHtml = event.tiers.map(tier => {
+      const ts = eventStats?.tiers[tier.id];
+      const soldOut = ts?.soldOut ?? false;
+      const lowStock = ts?.lowStock ?? false;
+      const available = ts?.available ?? tier.totalCapacity;
+      let availLabel = soldOut ? '<span class="tier-avail sold-out">Sold out</span>' :
+        lowStock ? `<span class="tier-avail low">⚡ Only ${available} left</span>` :
+        `<span class="tier-avail">${available.toLocaleString()} available</span>`;
+      return `
+        <div class="tier-row">
+          <div class="tier-info">
+            <div class="tier-dot" style="background:${tier.color}"></div>
+            <div class="tier-name">${tier.name}</div>
+          </div>
+          <div class="tier-right">
+            <div class="tier-price">${fmtPrice(tier.price)}</div>
+            ${availLabel}
+          </div>
+        </div>`;
+    }).join('');
+
+    const countdownHtml = countdown ? `
+      <div class="event-countdown">
+        <div class="countdown-unit"><div class="countdown-value" style="color:${event.neonColor}">${countdown.days}</div><div class="countdown-label">days</div></div>
+        <div class="countdown-unit"><div class="countdown-value">${countdown.hours}</div><div class="countdown-label">hrs</div></div>
+        <div class="countdown-unit"><div class="countdown-value">${countdown.mins}</div><div class="countdown-label">min</div></div>
+      </div>` : '';
+
+    const ctaHtml = allSoldOut
+      ? `<button class="btn-waitlist" onclick="openWaitlist('${event.id}', null)">Join Waitlist</button>`
+      : `<button class="btn-book" style="background:${event.neonColor};color:#000" onclick="openModal('${event.id}')">Book Tickets →</button>`;
+
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    card.innerHTML = `
+      <div class="event-card-header">
+        <div class="event-card-glow" style="background:${event.neonColor}"></div>
+        <div class="event-date-badge">${event.emoji} ${event.date} · ${event.time}</div>
+        <div class="event-name">${event.name}</div>
+        <div class="event-location">📍 ${event.location}</div>
+        <div class="event-description">${event.description}</div>
+        ${countdownHtml}
+      </div>
+      <div class="event-tiers">${tiersHtml}</div>
+      <div class="event-cta">${ctaHtml}</div>
+    `;
+    grid.appendChild(card);
+  }
+
+  // Refresh countdowns every minute
+  setTimeout(renderEventCards, 60000);
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────
+function openModal(eventId) {
+  currentEvent = EVENTS[eventId];
+  selectedTierId = null;
+  quantity = 1;
+  promoCode = null;
+  promoValid = false;
+  currentStep = 1;
+
+  document.getElementById('modal-event-name').textContent = currentEvent.name;
+  document.getElementById('modal-event-meta').textContent = `${currentEvent.date} · ${currentEvent.location}`;
+
+  renderTierOptions();
+  updateQtyDisplay();
+  goToStep(1);
+
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+// ─── TIER OPTIONS ─────────────────────────────────────────────────────
+function renderTierOptions() {
+  const eventStats = stats[currentEvent.id];
+  const container = document.getElementById('tier-options');
+  container.innerHTML = currentEvent.tiers.map(tier => {
+    const ts = eventStats?.tiers[tier.id];
+    const soldOut = ts?.soldOut ?? false;
+    const lowStock = ts?.lowStock ?? false;
+    const available = ts?.available ?? tier.totalCapacity;
+    const selected = selectedTierId === tier.id;
+
+    let availBadge = '';
+    if (soldOut) availBadge = `<div class="tier-avail sold-out">Sold out</div>`;
+    else if (lowStock) availBadge = `<div class="tier-avail low">⚡ Only ${available} left!</div>`;
+    else availBadge = `<div class="tier-avail">${available.toLocaleString()} remaining</div>`;
+
+    let badge = '';
+    if (tier.id === 'early-bird') badge = `<span class="tier-badge" style="background:${tier.color};color:#000">Limited</span>`;
+    if (tier.id === 'vip') badge = `<span class="tier-badge" style="background:rgba(255,0,107,0.15);color:#FF006B;border:1px solid rgba(255,0,107,0.3)">VIP</span>`;
+
+    return `
+      <div class="tier-option${selected ? ' selected' : ''}${soldOut ? ' sold-out' : ''}" onclick="${soldOut ? `openWaitlist('${currentEvent.id}','${tier.id}')` : `selectTier('${tier.id}')`}">
+        <div class="tier-opt-left">
+          <div class="tier-opt-name">
+            <span class="tier-dot" style="background:${tier.color};width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0"></span>
+            ${tier.name} ${badge}
+          </div>
+          <div class="tier-opt-desc">${tier.description}</div>
+          ${availBadge}
+        </div>
+        <div class="tier-opt-price">
+          ${fmtPrice(tier.price)}
+          <small>per runner</small>
+          ${soldOut ? '<small style="color:var(--magenta)">Join waitlist →</small>' : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function selectTier(tierId) {
+  selectedTierId = tierId;
+  renderTierOptions();
+  updateOrderSummary();
+}
+
+// ─── QUANTITY ─────────────────────────────────────────────────────────
+function changeQty(delta) {
+  quantity = Math.max(1, Math.min(MAX_QTY, quantity + delta));
+  updateQtyDisplay();
+  updateOrderSummary();
+  if (currentStep === 2) rebuildRunnerForms();
+}
+function updateQtyDisplay() {
+  document.getElementById('qty-display').textContent = quantity;
+  document.getElementById('qty-minus').disabled = quantity <= 1;
+  document.getElementById('qty-plus').disabled = quantity >= MAX_QTY;
+}
+
+// ─── PROMO ────────────────────────────────────────────────────────────
+async function applyPromo() {
+  const input = document.getElementById('promo-input');
+  const msg = document.getElementById('promo-msg');
+  const code = input.value.trim().toUpperCase();
+  if (!code) return;
+  msg.textContent = 'Checking...'; msg.className = 'promo-msg';
+  input.className = 'promo-input';
+
+  // We'll validate on checkout; just store and signal visually
+  // Real validation happens server-side
+  promoCode = code;
+  promoValid = true; // Optimistic — server will reject if invalid
+  input.className = 'promo-input valid';
+  msg.textContent = '✓ Promo code applied. Discount shown at checkout.';
+  msg.className = 'promo-msg ok';
+  updateOrderSummary();
+}
+
+// ─── ORDER SUMMARY ────────────────────────────────────────────────────
+function updateOrderSummary() {
+  const container = document.getElementById('order-summary');
+  if (!selectedTierId) { container.innerHTML = '<div style="color:var(--text-muted);font-size:0.875rem;">Select a ticket tier to see your total.</div>'; return; }
+  const tier = currentEvent.tiers.find(t => t.id === selectedTierId);
+  const groupDiscount = quantity >= GROUP_THRESHOLD;
+  const unitPrice = groupDiscount ? Math.round(tier.price * 0.9) : tier.price;
+  const subtotal = unitPrice * quantity;
+
+  container.innerHTML = `
+    <div class="summary-row"><span>${tier.name} × ${quantity}</span><span>${fmtPrice(unitPrice)} each</span></div>
+    ${groupDiscount ? `<div class="summary-row"><span class="discount">Group discount (${GROUP_DISCOUNT}%)</span><span class="discount">-${fmtPrice(tier.price * quantity - subtotal)}</span></div>` : ''}
+    ${promoCode ? `<div class="summary-row"><span>Promo: ${promoCode}</span><span style="color:var(--text-muted)">Applied at checkout</span></div>` : ''}
+    <div class="summary-row total"><span>Total${promoCode ? '*' : ''}</span><span>${fmtPrice(subtotal)}${promoCode ? '*' : ''}</span></div>
+    ${promoCode ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">* Final total shown in Stripe after promo applied</div>` : ''}
+  `;
+}
+
+// ─── RUNNER FORMS ─────────────────────────────────────────────────────
+function buildRunnerForms() {
+  const tabs = document.getElementById('runner-tabs');
+  const forms = document.getElementById('runner-forms');
+
+  tabs.innerHTML = Array.from({ length: quantity }, (_, i) =>
+    `<button class="runner-tab${i === 0 ? ' active' : ''}" id="rtab-${i}" onclick="switchRunner(${i})">Runner ${i + 1}</button>`
+  ).join('');
+
+  forms.innerHTML = Array.from({ length: quantity }, (_, i) => `
+    <div class="runner-form-pane${i === 0 ? ' active' : ''}" id="rform-${i}">
+      <div class="runner-form-title">Runner ${i + 1} Details</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">First Name *</label>
+          <input type="text" class="form-input" id="r${i}-firstName" placeholder="Jane">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name *</label>
+          <input type="text" class="form-input" id="r${i}-lastName" placeholder="Smith">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Email *</label>
+          <input type="email" class="form-input" id="r${i}-email" placeholder="jane@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" class="form-input" id="r${i}-dob">
+        </div>
+        <div class="form-group">
+          <label class="form-label">T-Shirt Size *</label>
+          <select class="form-input form-select" id="r${i}-tshirtSize">
+            <option value="">Select size</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+          </select>
+        </div>
+      </div>
+      <div class="ec-section">
+        <div class="ec-label">🚨 Emergency Contact</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Contact Name *</label>
+            <input type="text" class="form-input" id="r${i}-emergencyName" placeholder="John Smith">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Phone *</label>
+            <input type="tel" class="form-input" id="r${i}-emergencyPhone" placeholder="+44 7700 000000">
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function rebuildRunnerForms() {
+  // Preserve existing values
+  const existing = {};
+  for (let i = 0; i < 6; i++) {
+    const fields = ['firstName','lastName','email','dob','tshirtSize','emergencyName','emergencyPhone'];
+    fields.forEach(f => {
+      const el = document.getElementById(`r${i}-${f}`);
+      if (el) existing[`r${i}-${f}`] = el.value;
+    });
+  }
+  buildRunnerForms();
+  // Restore
+  Object.entries(existing).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function switchRunner(i) {
+  document.querySelectorAll('.runner-tab').forEach((t,j) => t.classList.toggle('active', j === i));
+  document.querySelectorAll('.runner-form-pane').forEach((p,j) => p.classList.toggle('active', j === i));
+}
+
+function collectRunners() {
+  const runners = [];
+  for (let i = 0; i < quantity; i++) {
+    runners.push({
+      firstName: document.getElementById(`r${i}-firstName`)?.value.trim() ?? '',
+      lastName: document.getElementById(`r${i}-lastName`)?.value.trim() ?? '',
+      email: document.getElementById(`r${i}-email`)?.value.trim() ?? '',
+      dateOfBirth: document.getElementById(`r${i}-dob`)?.value ?? '',
+      tshirtSize: document.getElementById(`r${i}-tshirtSize`)?.value ?? '',
+      emergencyName: document.getElementById(`r${i}-emergencyName`)?.value.trim() ?? '',
+      emergencyPhone: document.getElementById(`r${i}-emergencyPhone`)?.value.trim() ?? '',
+    });
+  }
+  return runners;
+}
+
+function validateRunners() {
+  const runners = collectRunners();
+  const required = ['firstName', 'lastName', 'email', 'tshirtSize', 'emergencyName', 'emergencyPhone'];
+  for (let i = 0; i < runners.length; i++) {
+    for (const field of required) {
+      if (!runners[i][field]) {
+        switchRunner(i);
+        const el = document.getElementById(`r${i}-${field}`);
+        if (el) { el.classList.add('error'); el.focus(); }
+        return false;
+      }
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(runners[i].email)) {
+      switchRunner(i);
+      const el = document.getElementById(`r${i}-email`);
+      if (el) { el.classList.add('error'); el.focus(); }
+      return false;
+    }
+  }
+  return true;
+}
+
+// ─── STEPS ────────────────────────────────────────────────────────────
+function goToStep(step) {
+  if (step === 2 && !selectedTierId) {
+    document.getElementById('tier-options').style.animation = 'none';
+    setTimeout(() => document.getElementById('tier-options').style.animation = '', 10);
+    return;
+  }
+  if (step === 2) { buildRunnerForms(); }
+  if (step === 3) {
+    if (!validateRunners()) return;
+    updateOrderSummary();
+    // Pre-fill lead email from runner 1
+    const r0email = document.getElementById('r0-email')?.value;
+    if (r0email) document.getElementById('lead-email').value = r0email;
+  }
+
+  currentStep = step;
+  [1,2,3].forEach(s => {
+    document.getElementById(`step-${s}`).classList.toggle('active', s === step);
+    document.getElementById(`step-btn-${s}`).classList.toggle('active', s === step);
+    document.getElementById(`step-btn-${s}`).classList.toggle('done', s < step);
+    const footer = document.getElementById(`step-${s}-footer`);
+    if (footer) footer.style.display = s === step ? '' : 'none';
+  });
+}
+
+// ─── CHECKOUT ─────────────────────────────────────────────────────────
+async function submitCheckout() {
+  const btn = document.getElementById('btn-checkout');
+  const errEl = document.getElementById('checkout-error');
+  errEl.classList.remove('show');
+
+  const leadEmail = document.getElementById('lead-email').value.trim();
+  if (!leadEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadEmail)) {
+    errEl.textContent = 'Please enter a valid confirmation email address.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  const runners = collectRunners();
+  const payload = {
+    eventId: currentEvent.id,
+    tierId: selectedTierId,
+    runners,
+    leadEmail,
+    ...(promoCode ? { promoCode } : {}),
+  };
+
+  try {
+    const res = await fetch('/api/tickets/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (res.ok && data.url) {
+      window.location.href = data.url;
+    } else if (data.error === 'INVALID_PROMO') {
+      errEl.textContent = `Promo code "${promoCode}" is not valid or has expired.`;
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Pay Securely via Stripe →';
+    } else if (data.error === 'SOLD_OUT') {
+      errEl.textContent = 'Sorry, this tier just sold out. Please select another.';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Pay Securely via Stripe →';
+      goToStep(1);
+    } else {
+      errEl.textContent = data.message || 'Something went wrong. Please try again.';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Pay Securely via Stripe →';
+    }
+  } catch(e) {
+    errEl.textContent = 'Network error. Please check your connection and try again.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Pay Securely via Stripe →';
+  }
+}
+
+// ─── WAITLIST ─────────────────────────────────────────────────────────
+function openWaitlist(eventId, tierId) {
+  waitlistTarget = { eventId, tierId };
+  const event = EVENTS[eventId];
+  const tier = tierId ? event.tiers.find(t => t.id === tierId) : null;
+  document.getElementById('waitlist-modal-desc').textContent =
+    `Join the waitlist for ${tier ? tier.name + ' tickets to ' : ''}${event.name}. We'll email you if a spot opens up.`;
+  document.getElementById('waitlist-success').style.display = 'none';
+  document.getElementById('waitlist-error').classList.remove('show');
+  document.getElementById('waitlist-name').value = '';
+  document.getElementById('waitlist-email').value = '';
+  document.getElementById('waitlist-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  closeModal();
+}
+
+function closeWaitlist() {
+  document.getElementById('waitlist-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function submitWaitlist() {
+  const name = document.getElementById('waitlist-name').value.trim();
+  const email = document.getElementById('waitlist-email').value.trim();
+  const errEl = document.getElementById('waitlist-error');
+  errEl.classList.remove('show');
+  if (!name || !email) { errEl.textContent = 'Please fill in all fields.'; errEl.classList.add('show'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email.'; errEl.classList.add('show'); return; }
+
+  try {
+    await fetch('/api/tickets/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...waitlistTarget, name, email, quantity: 1 })
+    });
+    document.getElementById('waitlist-success').style.display = 'block';
+    setTimeout(closeWaitlist, 2500);
+  } catch {
+    errEl.textContent = 'Could not join waitlist. Please try again.'; errEl.classList.add('show');
+  }
+}
+
+// ─── REMOVE ERROR ON INPUT ─────────────────────────────────────────────
+document.addEventListener('input', e => { if(e.target.classList.contains('form-input')) e.target.classList.remove('error'); });
+
+// ─── START ─────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

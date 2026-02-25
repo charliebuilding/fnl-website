@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — FNL Ticketing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00FFD1; --magenta: #FF006B; --yellow: #FFFF00;
+    --black: #000; --dark: #0A0A0A; --dark2: #111; --dark3: #1A1A1A;
+    --border: #2A2A2A; --text: #fff; --text-muted: #888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+  h1,h2,h3 { font-family: 'Space Grotesk', sans-serif; }
+
+  /* LOGIN */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 2rem;
+  }
+  .login-card {
+    background: var(--dark2); border: 1px solid var(--border); border-radius: 20px;
+    padding: 2.5rem; width: 100%; max-width: 380px; text-align: center;
+  }
+  .login-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .login-logo span { color: var(--cyan); }
+  .login-card h2 { font-size: 1.5rem; margin-bottom: 0.5rem; margin-top: 1.5rem; }
+  .login-card p { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem; }
+  .form-input {
+    width: 100%; background: var(--dark3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.85rem 1rem; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 0.9rem; margin-bottom: 1rem;
+  }
+  .form-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .btn-primary {
+    display: block; width: 100%; padding: 1rem;
+    background: var(--cyan); color: var(--black);
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
+    border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .error-msg { color: var(--magenta); font-size: 0.875rem; margin-bottom: 1rem; }
+
+  /* DASHBOARD */
+  #dashboard { display: none; }
+  .top-nav {
+    background: var(--dark2); border-bottom: 1px solid var(--border);
+    padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px;
+  }
+  .nav-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.1rem; }
+  .nav-logo span { color: var(--cyan); }
+  .nav-badge { background: rgba(0,255,209,0.15); color: var(--cyan); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 4px; margin-left: 0.75rem; }
+  .nav-actions { display: flex; gap: 0.75rem; align-items: center; }
+  .btn-sm {
+    padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); background: var(--dark3); color: var(--text);
+    text-decoration: none; display: inline-block; transition: background 0.2s;
+  }
+  .btn-sm:hover { background: var(--border); }
+  .btn-sm.cyan { background: var(--cyan); color: var(--black); border-color: var(--cyan); }
+  .btn-sm.cyan:hover { opacity: 0.9; }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+  /* STATS CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--dark2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+  .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .tab { padding: 0.875rem 1.5rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted); transition: all 0.2s; margin-bottom: -1px; }
+  .tab.active { border-color: var(--cyan); color: var(--cyan); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* EVENT CAPACITY CARDS */
+  .event-caps { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+  .event-cap-card { background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+  .event-cap-name { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+  .tier-cap-row { margin-bottom: 1rem; }
+  .tier-cap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-size: 0.875rem; }
+  .tier-cap-name { font-weight: 600; }
+  .tier-cap-numbers { color: var(--text-muted); }
+  .progress-bar { height: 8px; background: var(--dark3); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 999px; transition: width 0.5s; }
+
+  /* REGISTRATIONS TABLE */
+  .table-controls { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  .search-input {
+    flex: 1; min-width: 200px; max-width: 300px;
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.6rem 0.9rem;
+    color: var(--text); font-size: 0.875rem;
+  }
+  .search-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .filter-select {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.6rem 0.9rem;
+    color: var(--text); font-size: 0.875rem;
+  }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  thead th { text-align: left; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  td { padding: 0.875rem 1rem; vertical-align: middle; }
+  .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .badge-vip { background: rgba(255,0,107,0.15); color: var(--magenta); }
+  .badge-early { background: rgba(255,255,0,0.15); color: var(--yellow); }
+  .badge-general { background: rgba(0,255,209,0.15); color: var(--cyan); }
+
+  /* WAITLIST TABLE */
+  .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 0.9rem; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) { main { padding: 1rem; } .tab { padding: 0.75rem 1rem; font-size: 0.8rem; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">friday night <span>lights</span></div>
+    <h2>Admin Dashboard</h2>
+    <p>Enter your admin token to access registrations.</p>
+    <div class="error-msg" id="login-error" style="display:none;"></div>
+    <input type="password" class="form-input" id="token-input" placeholder="Admin token" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn-primary" onclick="login()">Access Dashboard</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="top-nav">
+    <div style="display:flex;align-items:center;">
+      <div class="nav-logo">friday night <span>lights</span></div>
+      <div class="nav-badge">Admin</div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-sm cyan" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn-sm" onclick="refresh()">↻ Refresh</button>
+      <button class="btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- STATS -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Total Registrations</div><div class="stat-value" id="stat-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">Battersea 5K</div><div class="stat-value" id="stat-battersea">—</div></div>
+      <div class="stat-card"><div class="stat-label">Hackney 10K</div><div class="stat-value" id="stat-hackney">—</div></div>
+      <div class="stat-card"><div class="stat-label">Run The Wharf</div><div class="stat-value" id="stat-wharf">—</div></div>
+      <div class="stat-card"><div class="stat-label">On Waitlist</div><div class="stat-value" id="stat-waitlist">—</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="showTab('registrations')">Registrations</div>
+      <div class="tab" onclick="showTab('capacity')">Capacity</div>
+      <div class="tab" onclick="showTab('waitlist-tab')">Waitlist</div>
+    </div>
+
+    <!-- REGISTRATIONS TAB -->
+    <div class="tab-pane active" id="tab-registrations">
+      <div class="table-controls">
+        <input type="text" class="search-input" id="search-input" placeholder="Search by name or email..." oninput="filterTable()">
+        <select class="filter-select" id="event-filter" onchange="filterTable()">
+          <option value="">All events</option>
+          <option value="battersea-5k">Battersea 5K</option>
+          <option value="hackney-10k">Hackney 10K</option>
+          <option value="run-the-wharf">Run The Wharf</option>
+        </select>
+        <select class="filter-select" id="tier-filter" onchange="filterTable()">
+          <option value="">All tiers</option>
+          <option value="early-bird">Early Bird</option>
+          <option value="general">General</option>
+          <option value="vip">VIP</option>
+        </select>
+        <div style="color:var(--text-muted);font-size:0.8rem;" id="result-count"></div>
+      </div>
+      <div class="table-wrap">
+        <table id="reg-table">
+          <thead>
+            <tr>
+              <th>Runner</th>
+              <th>Email</th>
+              <th>Event</th>
+              <th>Tier</th>
+              <th>T-Shirt</th>
+              <th>Emergency Contact</th>
+              <th>Paid</th>
+              <th>Confirmed</th>
+            </tr>
+          </thead>
+          <tbody id="reg-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CAPACITY TAB -->
+    <div class="tab-pane" id="tab-capacity">
+      <div class="event-caps" id="capacity-cards"></div>
+    </div>
+
+    <!-- WAITLIST TAB -->
+    <div class="tab-pane" id="tab-waitlist-tab">
+      <div class="table-wrap">
+        <table id="waitlist-table">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Event</th><th>Tier</th><th>Qty</th><th>Added</th></tr>
+          </thead>
+          <tbody id="waitlist-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let adminToken = '';
+let allRegistrations = [];
+let capacityData = {};
+let waitlistData = [];
+
+const EVENT_NAMES = { 'battersea-5k': 'Battersea 5K', 'hackney-10k': 'Hackney 10K', 'run-the-wharf': 'Run The Wharf' };
+const TIER_NAMES = { 'early-bird': 'Early Bird', 'general': 'General', 'vip': 'VIP' };
+const TIER_COLORS = { 'early-bird': '#FFFF00', 'general': '#00FFD1', 'vip': '#FF006B' };
+const EVENT_COLORS = { 'battersea-5k': '#00FFD1', 'hackney-10k': '#FF006B', 'run-the-wharf': '#FFFF00' };
+
+async function login() {
+  const token = document.getElementById('token-input').value.trim();
+  if (!token) return;
+
+  const res = await fetch('/api/tickets/admin?action=registrations', {
+    headers: { 'x-admin-token': token }
+  });
+
+  if (res.status === 401) {
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = 'Invalid admin token.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  adminToken = token;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  await loadAll();
+}
+
+async function loadAll() {
+  await Promise.all([loadRegistrations(), loadCapacity(), loadWaitlist()]);
+}
+
+async function loadRegistrations() {
+  const res = await fetch('/api/tickets/admin?action=registrations', { headers: { 'x-admin-token': adminToken } });
+  const data = await res.json();
+  allRegistrations = data.registrations || [];
+  renderStats(data);
+  filterTable();
+}
+
+async function loadCapacity() {
+  const res = await fetch('/api/tickets/admin?action=capacity', { headers: { 'x-admin-token': adminToken } });
+  capacityData = await res.json();
+  renderCapacity();
+}
+
+async function loadWaitlist() {
+  const res = await fetch('/api/tickets/waitlist', { headers: { 'x-admin-token': adminToken } });
+  const data = await res.json();
+  waitlistData = Array.isArray(data) ? data : (data.entries || []);
+  document.getElementById('stat-waitlist').textContent = waitlistData.length.toLocaleString();
+  renderWaitlist();
+}
+
+function renderStats(data) {
+  document.getElementById('stat-total').textContent = (data.total || 0).toLocaleString();
+  document.getElementById('stat-battersea').textContent = ((data.byEvent || {})['battersea-5k']?.length || 0).toLocaleString();
+  document.getElementById('stat-hackney').textContent = ((data.byEvent || {})['hackney-10k']?.length || 0).toLocaleString();
+  document.getElementById('stat-wharf').textContent = ((data.byEvent || {})['run-the-wharf']?.length || 0).toLocaleString();
+}
+
+function filterTable() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const eventF = document.getElementById('event-filter').value;
+  const tierF = document.getElementById('tier-filter').value;
+
+  const filtered = allRegistrations.filter(r => {
+    const name = `${r.runner?.firstName || ''} ${r.runner?.lastName || ''}`.toLowerCase();
+    const email = (r.runner?.email || r.customerEmail || '').toLowerCase();
+    const matchSearch = !search || name.includes(search) || email.includes(search);
+    const matchEvent = !eventF || r.eventId === eventF;
+    const matchTier = !tierF || r.tierId === tierF;
+    return matchSearch && matchEvent && matchTier;
+  });
+
+  document.getElementById('result-count').textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('reg-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">No registrations found.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const tierBadgeClass = r.tierId === 'vip' ? 'badge-vip' : r.tierId === 'early-bird' ? 'badge-early' : 'badge-general';
+    const paid = r.amountPaid ? `£${(r.amountPaid/100/r.totalRunners).toFixed(2)}` : '—';
+    const date = r.confirmedAt ? new Date(r.confirmedAt).toLocaleString('en-GB', { dateStyle:'short', timeStyle:'short' }) : '—';
+    return `
+      <tr>
+        <td><strong>${r.runner?.firstName || ''} ${r.runner?.lastName || ''}</strong></td>
+        <td style="color:var(--text-muted)">${r.runner?.email || r.customerEmail || '—'}</td>
+        <td>${EVENT_NAMES[r.eventId] || r.eventId}</td>
+        <td><span class="badge ${tierBadgeClass}">${TIER_NAMES[r.tierId] || r.tierId}</span></td>
+        <td>${r.runner?.tshirtSize || '—'}</td>
+        <td style="font-size:0.8rem;">${r.runner?.emergencyName || '—'}<br><span style="color:var(--text-muted)">${r.runner?.emergencyPhone || ''}</span></td>
+        <td>${paid}</td>
+        <td style="color:var(--text-muted);font-size:0.8rem;">${date}</td>
+      </tr>`;
+  }).join('');
+}
+
+function renderCapacity() {
+  const container = document.getElementById('capacity-cards');
+  container.innerHTML = Object.values(capacityData).map(event => {
+    const tiersHtml = Object.values(event.tiers).map(tier => {
+      const pct = Math.round((tier.sold / tier.totalCapacity) * 100);
+      const color = TIER_COLORS[tier.id] || '#00FFD1';
+      return `
+        <div class="tier-cap-row">
+          <div class="tier-cap-header">
+            <span class="tier-cap-name">${tier.name}</span>
+            <span class="tier-cap-numbers">${tier.sold.toLocaleString()} / ${tier.totalCapacity.toLocaleString()} (${pct}%)</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="event-cap-card">
+        <div class="event-cap-name">${event.name}</div>
+        ${tiersHtml}
+      </div>`;
+  }).join('');
+}
+
+function renderWaitlist() {
+  const tbody = document.getElementById('waitlist-tbody');
+  if (waitlistData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No waitlist entries.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = waitlistData.map(w => `
+    <tr>
+      <td><strong>${w.name || '—'}</strong></td>
+      <td style="color:var(--text-muted)">${w.email || '—'}</td>
+      <td>${EVENT_NAMES[w.eventId] || w.eventId || '—'}</td>
+      <td>${TIER_NAMES[w.tierId] || w.tierId || 'Any'}</td>
+      <td>${w.quantity || 1}</td>
+      <td style="color:var(--text-muted);font-size:0.8rem;">${w.addedAt ? new Date(w.addedAt).toLocaleString('en-GB', { dateStyle:'short', timeStyle:'short' }) : '—'}</td>
+    </tr>`).join('');
+}
+
+async function exportCSV() {
+  const res = await fetch('/api/tickets/admin?action=export-csv', { headers: { 'x-admin-token': adminToken } });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `fnl-registrations-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const tabs = ['registrations','capacity','waitlist-tab'];
+    t.classList.toggle('active', tabs[i] === id);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === `tab-${id}`));
+}
+
+function refresh() { loadAll(); }
+function logout() { adminToken=''; document.getElementById('dashboard').style.display='none'; document.getElementById('login-screen').style.display='flex'; document.getElementById('token-input').value=''; }
+</script>
+</body>
+</html>

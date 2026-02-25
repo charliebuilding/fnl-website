@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Ticket — Friday Night Lights</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --cyan: #00FFD1; --magenta: #FF006B; --yellow: #FFFF00;
+    --black: #000; --dark: #0A0A0A; --dark2: #111; --dark3: #1A1A1A;
+    --border: #2A2A2A; --text: #fff; --text-muted: #888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; }
+  h1,h2,h3,h4,h5 { font-family: 'Space Grotesk', sans-serif; }
+
+  nav {
+    background: rgba(0,0,0,0.95); border-bottom: 1px solid var(--border);
+    padding: 0 2rem; display: flex; align-items: center; height: 64px;
+  }
+  .nav-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 1.1rem; }
+  .nav-logo span { color: var(--cyan); }
+
+  .page { max-width: 540px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+  .success-header { text-align: center; margin-bottom: 3rem; }
+  .success-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(0,255,209,0.15); border: 2px solid var(--cyan);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; margin: 0 auto 1.5rem;
+  }
+  .success-header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 0.5rem; }
+  .success-header p { color: var(--text-muted); }
+
+  /* TICKET CARD */
+  .ticket-card {
+    background: var(--dark2); border: 1px solid var(--border); border-radius: 20px;
+    overflow: hidden; margin-bottom: 1.5rem; position: relative;
+  }
+  .ticket-header {
+    padding: 1.75rem 2rem;
+    position: relative; overflow: hidden;
+  }
+  .ticket-glow {
+    position: absolute; top: -60px; right: -60px; width: 200px; height: 200px;
+    border-radius: 50%; filter: blur(60px); opacity: 0.3; pointer-events: none;
+  }
+  .ticket-eyebrow {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 0.5rem; position: relative;
+  }
+  .ticket-event-name {
+    font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; position: relative;
+    margin-bottom: 0.25rem;
+  }
+  .ticket-event-meta { color: var(--text-muted); font-size: 0.875rem; position: relative; }
+  .ticket-tier-badge {
+    display: inline-block; margin-top: 0.75rem; position: relative;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.3rem 0.75rem; border-radius: 999px;
+  }
+
+  /* DIVIDER */
+  .ticket-divider {
+    display: flex; align-items: center; margin: 0 -1px; position: relative;
+  }
+  .divider-cut { width: 20px; height: 20px; border-radius: 50%; background: var(--black); flex-shrink: 0; }
+  .divider-cut.left { margin-left: -1px; }
+  .divider-cut.right { margin-right: -1px; }
+  .divider-line { flex: 1; border-top: 2px dashed var(--border); }
+
+  .ticket-body { padding: 1.75rem 2rem; }
+  .ticket-runner-name { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .ticket-runner-id { font-size: 0.8rem; color: var(--text-muted); font-family: 'Courier New', monospace; margin-bottom: 1.5rem; }
+
+  .ticket-qr {
+    display: flex; justify-content: center; margin-bottom: 1.5rem;
+  }
+  .qr-wrapper {
+    background: #fff; padding: 1rem; border-radius: 12px;
+    display: inline-flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  }
+  .qr-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #000; }
+
+  .ticket-details {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  }
+  .detail-item {}
+  .detail-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.2rem; }
+  .detail-value { font-weight: 600; font-size: 0.9rem; }
+
+  /* MULTIPLE TICKETS NAV */
+  .ticket-nav { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .ticket-nav-btn {
+    padding: 0.4rem 0.85rem; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .ticket-nav-btn.active { background: var(--cyan); color: var(--black); border-color: var(--cyan); }
+
+  /* ACTIONS */
+  .actions { display: flex; flex-direction: column; gap: 0.75rem; }
+  .btn-primary {
+    display: block; width: 100%; padding: 1rem; text-align: center;
+    background: var(--cyan); color: var(--black);
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
+    border: none; border-radius: 10px; cursor: pointer; text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary {
+    display: block; width: 100%; padding: 0.875rem; text-align: center;
+    background: transparent; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500;
+    border: 1px solid var(--border); border-radius: 10px; cursor: pointer; text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .btn-secondary:hover { border-color: #444; }
+
+  /* PENDING / ERROR states */
+  .state-card {
+    background: var(--dark2); border: 1px solid var(--border); border-radius: 20px;
+    padding: 3rem 2rem; text-align: center;
+  }
+  .state-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .state-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .state-desc { color: var(--text-muted); font-size: 0.875rem; }
+  .spinner-big {
+    width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--cyan);
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* WHAT'S INCLUDED */
+  .whats-included { background: var(--dark2); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 2rem; margin-top: 1.5rem; }
+  .whats-included h3 { font-size: 0.875rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .include-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; font-size: 0.875rem; border-bottom: 1px solid var(--border); }
+  .include-item:last-child { border-bottom: none; }
+  .include-icon { font-size: 1.25rem; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">friday night <span>lights</span></div>
+</nav>
+
+<div class="page" id="page-content">
+  <!-- Loading state -->
+  <div class="state-card" id="loading-state">
+    <div class="spinner-big"></div>
+    <div class="state-title">Loading your ticket...</div>
+    <div class="state-desc">Just a moment while we confirm your registration.</div>
+  </div>
+</div>
+
+<script>
+const EVENTS = {
+  'battersea-5k': { name: 'FNL Battersea Park 5K', date: 'April 24, 2026', time: '20:00', location: 'Battersea Park, London', neonColor: '#00FFD1' },
+  'hackney-10k': { name: 'Hackney Quarter 10K', date: 'May 14, 2026', time: '20:00', location: 'Victoria Park, Hackney', neonColor: '#FF006B' },
+  'run-the-wharf': { name: 'Run The Wharf 5K', date: 'September 3, 2026', time: '20:00', location: 'Canary Wharf, London', neonColor: '#FFFF00' },
+};
+const TIER_NAMES = { 'early-bird': 'Early Bird', 'general': 'General Entry', 'vip': 'VIP Experience' };
+const TIER_COLORS = { 'early-bird': '#FFFF00', 'general': '#00FFD1', 'vip': '#FF006B' };
+
+let ticketsData = [];
+let currentTicketIndex = 0;
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+
+  if (!sessionId) {
+    showError('No session found', 'This link appears to be invalid. Please check your confirmation email.');
+    return;
+  }
+
+  // Retry up to 5x with 2s delay (webhook may be slightly delayed)
+  let attempts = 0;
+  let data = null;
+
+  while (attempts < 5) {
+    try {
+      const res = await fetch(`/api/tickets/ticket?session_id=${encodeURIComponent(sessionId)}`);
+      data = await res.json();
+
+      if (res.ok && data.tickets) {
+        ticketsData = data.tickets;
+        renderTickets();
+        return;
+      }
+
+      if (res.status === 202) {
+        // Payment confirmed but webhook not yet processed — show basic info
+        renderPendingTicket(data);
+        return;
+      }
+
+      if (res.status === 402) {
+        showError('Payment not completed', 'It looks like payment wasn\'t completed. If you were charged, please contact us.');
+        return;
+      }
+    } catch(e) {}
+
+    attempts++;
+    if (attempts < 5) await new Promise(r => setTimeout(r, 2000));
+  }
+
+  // Fallback: show pending state
+  if (data) renderPendingTicket(data);
+  else showError('Could not load ticket', 'Please check your confirmation email or contact us at hello@fridaynightlights.co.uk');
+}
+
+function renderTickets() {
+  const container = document.getElementById('page-content');
+
+  const navHtml = ticketsData.length > 1 ? `
+    <div class="ticket-nav" id="ticket-nav">
+      ${ticketsData.map((t, i) => `<button class="ticket-nav-btn${i===0?' active':''}" onclick="showTicket(${i})">Runner ${i+1}: ${t.runner?.firstName || ''}</button>`).join('')}
+    </div>` : '';
+
+  container.innerHTML = `
+    <div class="success-header">
+      <div class="success-icon">✓</div>
+      <h1>You're in! 🎉</h1>
+      <p>Your registration is confirmed. See you on the start line.</p>
+    </div>
+    ${navHtml}
+    <div id="ticket-display"></div>
+    <div class="actions" id="actions" style="margin-top:1.5rem;">
+      <button class="btn-primary" onclick="downloadTicket()">Download Ticket</button>
+      <a href="/tickets/" class="btn-secondary">Book more tickets</a>
+      <a href="/" class="btn-secondary">Back to site</a>
+    </div>
+    <div class="whats-included" id="whats-included"></div>
+  `;
+
+  showTicket(0);
+}
+
+function showTicket(index) {
+  currentTicketIndex = index;
+
+  // Update nav
+  document.querySelectorAll('.ticket-nav-btn').forEach((b,i) => b.classList.toggle('active', i === index));
+
+  const t = ticketsData[index];
+  const event = EVENTS[t.eventId] || {};
+  const neonColor = event.neonColor || '#00FFD1';
+  const tierColor = TIER_COLORS[t.tierId] || '#00FFD1';
+  const tierName = TIER_NAMES[t.tierId] || t.tierId;
+
+  document.getElementById('ticket-display').innerHTML = `
+    <div class="ticket-card">
+      <div class="ticket-header">
+        <div class="ticket-glow" style="background:${neonColor}"></div>
+        <div class="ticket-eyebrow" style="color:${neonColor}">Friday Night Lights · ${t.eventId === 'hackney-10k' ? '10K' : '5K'} Race</div>
+        <div class="ticket-event-name">${event.name || t.eventName}</div>
+        <div class="ticket-event-meta">📅 ${event.date || ''} · ${event.time || '20:00'}</div>
+        <div class="ticket-event-meta">📍 ${event.location || ''}</div>
+        <div class="ticket-tier-badge" style="background:${tierColor};color:#000">${tierName}</div>
+      </div>
+
+      <div class="ticket-divider">
+        <div class="divider-cut left"></div>
+        <div class="divider-line"></div>
+        <div class="divider-cut right"></div>
+      </div>
+
+      <div class="ticket-body">
+        <div class="ticket-runner-name">${t.runner?.firstName || ''} ${t.runner?.lastName || ''}</div>
+        <div class="ticket-runner-id">ID: ${t.registrationId}</div>
+        <div class="ticket-qr">
+          <div class="qr-wrapper">
+            <div id="qrcode-${index}"></div>
+            <div class="qr-label">Scan at event entry</div>
+          </div>
+        </div>
+        <div class="ticket-details">
+          <div class="detail-item">
+            <div class="detail-label">T-Shirt Size</div>
+            <div class="detail-value">${t.runner?.tshirtSize || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Paid</div>
+            <div class="detail-value">£${((t.amountPaid || 0) / 100 / (t.totalRunners || 1)).toFixed(2)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Emergency Contact</div>
+            <div class="detail-value" style="font-size:0.8rem;">${t.runner?.emergencyName || '—'}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Emergency Phone</div>
+            <div class="detail-value" style="font-size:0.8rem;">${t.runner?.emergencyPhone || '—'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Generate QR code
+  const qrData = JSON.stringify({
+    id: t.registrationId,
+    session: t.sessionId,
+    event: t.eventId,
+    runner: `${t.runner?.firstName || ''} ${t.runner?.lastName || ''}`,
+    tier: t.tierId,
+  });
+
+  setTimeout(() => {
+    const el = document.getElementById(`qrcode-${index}`);
+    if (el && window.QRCode) {
+      new QRCode(el, { text: qrData, width: 160, height: 160, colorDark: '#000000', colorLight: '#ffffff' });
+    }
+  }, 100);
+
+  // What's included
+  const vip = t.tierId === 'vip';
+  const earlyBird = t.tierId === 'early-bird';
+  document.getElementById('whats-included').innerHTML = `
+    <h3>What's included</h3>
+    <div class="include-item"><span class="include-icon">🏅</span><span>Finisher medal</span></div>
+    <div class="include-item"><span class="include-icon">👕</span><span>Event t-shirt (${t.runner?.tshirtSize || 'your selected size'})</span></div>
+    <div class="include-item"><span class="include-icon">🎤</span><span>Live DJ set & post-race festival village</span></div>
+    ${vip ? `
+      <div class="include-item"><span class="include-icon">⚡</span><span>Priority start pen</span></div>
+      <div class="include-item"><span class="include-icon">🥂</span><span>Exclusive VIP tent access & welcome drinks</span></div>
+      <div class="include-item"><span class="include-icon">🎁</span><span>Premium race pack & goodie bag</span></div>
+    ` : ''}
+    ${earlyBird ? `<div class="include-item"><span class="include-icon">⭐</span><span>Early access — you got in first!</span></div>` : ''}
+    <div class="include-item"><span class="include-icon">📸</span><span>Professional race photography</span></div>
+    <div class="include-item"><span class="include-icon">🍺</span><span>Non-alcoholic welcome drink</span></div>
+  `;
+}
+
+function renderPendingTicket(data) {
+  const container = document.getElementById('page-content');
+  const event = EVENTS[data.eventId] || {};
+  container.innerHTML = `
+    <div class="success-header">
+      <div class="success-icon">✓</div>
+      <h1>Payment confirmed!</h1>
+      <p>Your registration for ${event.name || data.eventName} is being processed.</p>
+    </div>
+    <div class="state-card">
+      <div class="state-icon">📧</div>
+      <div class="state-title">Check your email</div>
+      <div class="state-desc">Your ticket confirmation with QR code will arrive at <strong>${data.customerEmail || 'your email'}</strong> within a few minutes.<br><br>Session: <code style="font-size:0.75rem;color:var(--text-muted)">${data.sessionId}</code></div>
+    </div>
+    <div class="actions" style="margin-top:1.5rem;">
+      <button class="btn-primary" onclick="location.reload()">Refresh</button>
+      <a href="/" class="btn-secondary">Back to site</a>
+    </div>
+  `;
+}
+
+function showError(title, desc) {
+  document.getElementById('page-content').innerHTML = `
+    <div class="state-card">
+      <div class="state-icon">❌</div>
+      <div class="state-title">${title}</div>
+      <div class="state-desc">${desc}</div>
+    </div>
+    <div class="actions" style="margin-top:1.5rem;">
+      <a href="/tickets/" class="btn-secondary">Return to tickets</a>
+    </div>
+  `;
+}
+
+function downloadTicket() {
+  window.print();
+}
+
+init();
+</script>
+
+<style>
+@media print {
+  nav, .actions, .whats-included, .ticket-nav { display: none !important; }
+  body { background: white; color: black; }
+  .ticket-card { border: 2px solid #000 !important; background: white !important; }
+  .ticket-event-name, .ticket-runner-name { color: black !important; }
+  .ticket-event-meta, .ticket-runner-id, .detail-label, .detail-value { color: #444 !important; }
+}
+</style>
+</body>
+</html>
