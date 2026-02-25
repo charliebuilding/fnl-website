@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friday Night Lights | The Running Nightclub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --fnl-neon-green: #39FF14;
+            --fnl-electric-pink: #FF10F0;
+            --fnl-deep-black: #0A0A0A;
+            --fnl-charcoal: #1A1A1A;
+            --fnl-neon-orange: #FF6B00;
+            --fnl-electric-blue: #00D4FF;
+            --fnl-purple-glow: #9D00FF;
+            --fnl-white: #FFFFFF;
+            --fnl-light-grey: #B0B0B0;
+            --fnl-cyan: #00FFD1;
+            --fnl-magenta: #FF006B;
+            --fnl-yellow: #FFFF00;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--fnl-deep-black);
+            color: var(--fnl-white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: linear-gradient(180deg, rgba(10,10,10,0.98) 0%, rgba(10,10,10,0) 100%);
+            backdrop-filter: blur(10px);
+        }
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--fnl-cyan), var(--fnl-magenta), var(--fnl-yellow));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--fnl-deep-black);
+        }
+        .logo span {
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta), var(--fnl-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--fnl-white);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            transition: width 0.3s ease;
+        }
+        .nav-links a:hover::after { width: 100%; }
+        .nav-links a:hover { color: var(--fnl-cyan); }
+        .nav-cta {
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            color: var(--fnl-deep-black);
+            padding: 14px 32px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .nav-cta:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 209, 0.5);
+            transform: translateY(-2px);
+        }
+        /* Mobile menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--fnl-white);
+            transition: all 0.3s ease;
+        }
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(10, 10, 10, 0.98);
+            z-index: 999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+        .mobile-menu.active {
+            display: flex;
+        }
+        .mobile-menu a {
+            color: var(--fnl-white);
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: color 0.3s;
+        }
+        .mobile-menu a:hover {
+            color: var(--fnl-cyan);
+        }
+        @media (max-width: 768px) {
+            nav {
+                padding: 15px 20px;
+            }
+            .nav-links, .nav-cta {
+                display: none;
+            }
+            .hamburger {
+                display: flex;
+            }
+            .logo {
+                font-size: 18px;
+            }
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+        }
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 120px 60px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #1a0a3e 0%, #0d0520 50%, var(--fnl-deep-black) 100%);
+        }
+        @media (max-width: 768px) {
+            .hero {
+                padding: 100px 20px 60px;
+                min-height: auto;
+            }
+            .hero h1 {
+                font-size: 42px;
+                letter-spacing: -2px;
+                margin-bottom: 20px;
+            }
+            .hero p {
+                font-size: 16px;
+                margin-bottom: 30px;
+            }
+            .hero-tag {
+                font-size: 10px;
+                padding: 8px 16px;
+                margin-bottom: 20px;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .btn-primary, .btn-secondary {
+                padding: 16px 32px;
+                font-size: 14px;
+                width: 100%;
+                text-align: center;
+            }
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(0, 255, 209, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(255, 0, 107, 0.15) 0%, transparent 50%);
+            z-index: 1;
+        }
+        .hero-content {
+            text-align: center;
+            max-width: 1000px;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-tag {
+            display: inline-block;
+            background: rgba(0, 255, 209, 0.1);
+            border: 1px solid var(--fnl-cyan);
+            color: var(--fnl-cyan);
+            padding: 10px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            border-radius: 30px;
+        }
+        .hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 90px;
+            font-weight: 800;
+            line-height: 0.95;
+            margin-bottom: 30px;
+            letter-spacing: -4px;
+        }
+        .hero h1 .highlight {
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta), var(--fnl-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 22px;
+            color: var(--fnl-light-grey);
+            max-width: 650px;
+            margin: 0 auto 50px;
+            line-height: 1.7;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            color: var(--fnl-deep-black);
+            padding: 20px 48px;
+            border: none;
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 50px rgba(0, 255, 209, 0.5), 0 0 100px rgba(255, 0, 107, 0.3);
+            transform: translateY(-3px);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--fnl-white);
+            padding: 20px 48px;
+            border: 2px solid rgba(255,255,255,0.3);
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .btn-secondary:hover {
+            border-color: var(--fnl-cyan);
+            color: var(--fnl-cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 209, 0.3);
+        }
+        /* Game Section */
+        .game-section {
+            background: linear-gradient(180deg, var(--fnl-deep-black) 0%, #1a0a3e 20%, #0d0520 50%, var(--fnl-deep-black) 100%);
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(0, 255, 209, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 0, 107, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .game-section .section-header {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 40px;
+        }
+        .game-section .section-header h2 {
+            font-family: 'Orbitron', 'Space Grotesk', sans-serif;
+            font-size: 48px;
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta), var(--fnl-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+        .game-section .section-header p {
+            color: var(--fnl-light-grey);
+            font-size: 18px;
+        }
+        .game-wrapper {
+            position: relative;
+            max-width: 900px;
+            height: 550px;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(0, 255, 209, 0.3), 0 0 120px rgba(255, 0, 107, 0.2);
+            border: 2px solid rgba(0, 255, 209, 0.3);
+            background: linear-gradient(180deg, #1a0a3e 0%, #0d0520 50%, #1a1a2e 100%);
+        }
+        @media (max-width: 768px) {
+            .game-wrapper {
+                height: 70vh !important;
+                max-height: none !important;
+                border-radius: 12px;
+                margin: 0 10px;
+            }
+            .game-section {
+                padding: 40px 10px;
+            }
+            .game-section .section-header h2 {
+                font-size: 28px;
+            }
+            .game-section .section-header p {
+                font-size: 14px;
+            }
+        }
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* Game UI Styles */
+        .game-ui {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+        }
+        .game-ui > * { pointer-events: auto; }
+        .fnl-logo-box {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .fnl-logo-game {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 2px;
+            line-height: 1.2;
+        }
+        .fnl-logo-game .friday, .fnl-logo-game .night {
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255,255,255,0.8);
+            display: block;
+        }
+        .fnl-logo-game .lights {
+            background: linear-gradient(90deg, #00FFD1, #66FF70, #FFFF00, #FF7F35, #FF006B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+        }
+        #gameScore {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: #fff;
+            text-shadow: 0 0 10px #fff;
+        }
+        .game-screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(10, 10, 31, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+        }
+        .game-screen.hidden { display: none; }
+        .game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-shift 3s ease infinite;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .game-subtitle {
+            font-size: 16px;
+            color: #00ffff;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        .game-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            padding: 14px 36px;
+            border: 3px solid #ff00ff;
+            background: rgba(255, 0, 255, 0.1);
+            color: #ff00ff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+            transition: all 0.3s;
+            border-radius: 5px;
+        }
+        .game-btn:hover {
+            background: rgba(255, 0, 255, 0.3);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.8);
+            transform: scale(1.05);
+        }
+        .game-input {
+            font-family: 'Oswald', sans-serif;
+            font-size: 16px;
+            padding: 10px 18px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ff00ff;
+            border-radius: 5px;
+            color: #fff;
+            text-align: center;
+            width: 200px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+        .game-input:focus { border-color: #00ffff; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+        .game-instructions {
+            font-size: 13px;
+            color: #999;
+            margin-top: 15px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        #gameFinalScore {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 64px;
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+        }
+        .scoreboard {
+            background: rgba(10, 10, 31, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 15px;
+            max-width: 300px;
+            width: 90%;
+            max-height: 150px;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        .scoreboard-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px;
+            margin: 3px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #ff00ff;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .score-entry:nth-child(1) { border-left-color: #ffd700; }
+        .score-entry:nth-child(2) { border-left-color: #c0c0c0; }
+        .score-entry:nth-child(3) { border-left-color: #cd7f32; }
+        .score-entry .rank { color: #999; width: 30px; }
+        .score-entry .username { flex: 1; color: #fff; }
+        .score-entry .points { color: #00ffff; font-family: 'Orbitron', sans-serif; }
+        /* Stats Bar */
+        .stats-bar {
+            background: var(--fnl-deep-black);
+            padding: 80px 60px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+        }
+        .stat {
+            text-align: center;
+            padding: 30px;
+            background: var(--fnl-charcoal);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+        }
+        .stat:hover {
+            border-color: var(--fnl-cyan);
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 60px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: var(--fnl-light-grey);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 12px;
+        }
+        @media (max-width: 768px) {
+            .stats-bar {
+                padding: 40px 0;
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                gap: 15px;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+            .stats-bar::-webkit-scrollbar {
+                display: none;
+            }
+            .stat {
+                flex: 0 0 200px;
+                scroll-snap-align: center;
+                padding: 25px 20px;
+            }
+            .stat-number {
+                font-size: 42px;
+            }
+            .stat-label {
+                font-size: 12px;
+            }
+        }
+        /* About Section */
+        .about {
+            padding: 140px 60px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 100px;
+            align-items: center;
+            background: var(--fnl-charcoal);
+        }
+        .about-content h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            line-height: 1.1;
+        }
+        .about-content h2 span {
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .about-content p {
+            color: var(--fnl-light-grey);
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+        .about-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .feature {
+            background: var(--fnl-deep-black);
+            padding: 28px;
+            border-radius: 12px;
+            border-left: 4px solid var(--fnl-cyan);
+            transition: all 0.3s ease;
+        }
+        .feature:hover {
+            transform: translateX(10px);
+            border-left-color: var(--fnl-magenta);
+        }
+        .feature h4 { font-size: 18px; margin-bottom: 8px; color: var(--fnl-white); }
+        .feature p { font-size: 14px; color: var(--fnl-light-grey); margin: 0; }
+        @media (max-width: 768px) {
+            .about {
+                padding: 60px 20px;
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .about-content h2 {
+                font-size: 32px;
+            }
+            .about-content p {
+                font-size: 16px;
+            }
+            .about-features {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .feature {
+                padding: 20px;
+            }
+            .about-image {
+                order: -1;
+            }
+        }
+        /* Festivals Section */
+        .festivals {
+            padding: 140px 60px;
+            background: var(--fnl-deep-black);
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        .section-header h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .section-header p {
+            color: var(--fnl-light-grey);
+            font-size: 20px;
+        }
+        .festival-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+        }
+        .festival-card {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 50px;
+            background: linear-gradient(180deg, rgba(0,255,209,0.1) 0%, var(--fnl-charcoal) 100%);
+            border: 1px solid rgba(0,255,209,0.2);
+            transition: all 0.4s ease;
+        }
+        .festival-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--fnl-cyan);
+        }
+        .festival-badge {
+            display: inline-block;
+            background: var(--fnl-cyan);
+            color: var(--fnl-deep-black);
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            width: fit-content;
+        }
+        .festival-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        .festival-card p {
+            color: var(--fnl-light-grey);
+            font-size: 16px;
+            margin-bottom: 25px;
+            max-width: 400px;
+        }
+        .festival-stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .festival-stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--fnl-cyan);
+        }
+        .festival-stat-label {
+            font-size: 12px;
+            color: var(--fnl-light-grey);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        @media (max-width: 768px) {
+            .festivals {
+                padding: 60px 20px;
+            }
+            .section-header {
+                margin-bottom: 40px;
+            }
+            .section-header h2 {
+                font-size: 32px;
+            }
+            .section-header p {
+                font-size: 16px;
+            }
+            .festival-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .festival-card {
+                min-height: 350px;
+                padding: 30px;
+            }
+            .festival-card h3 {
+                font-size: 28px;
+            }
+            .festival-stats {
+                gap: 20px;
+            }
+            .festival-stat-number {
+                font-size: 24px;
+            }
+        }
+        /* Locations */
+        .locations {
+            padding: 140px 60px;
+            background: var(--fnl-charcoal);
+        }
+        .locations-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+        .location-card {
+            background: var(--fnl-deep-black);
+            padding: 50px 40px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .location-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--fnl-cyan);
+        }
+        .location-icon { font-size: 50px; margin-bottom: 25px; }
+        .location-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .location-card p {
+            color: var(--fnl-light-grey);
+            font-size: 16px;
+            margin-bottom: 25px;
+            line-height: 1.7;
+        }
+        .location-schedule {
+            background: var(--fnl-charcoal);
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--fnl-cyan);
+        }
+        .location-schedule span { font-weight: 700; }
+        @media (max-width: 768px) {
+            .locations {
+                padding: 60px 20px;
+            }
+            .locations-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .location-card {
+                padding: 30px 25px;
+            }
+            .location-card h3 {
+                font-size: 24px;
+            }
+        }
+        /* Newsletter */
+        .newsletter {
+            padding: 120px 60px;
+            text-align: center;
+            background: var(--fnl-deep-black);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        @media (max-width: 768px) {
+            .newsletter {
+                padding: 60px 20px;
+            }
+            .newsletter h2 {
+                font-size: 28px;
+            }
+            .newsletter-form {
+                flex-direction: column;
+            }
+            .newsletter-form input {
+                width: 100%;
+            }
+        }
+        /* Instagram Section */
+        .instagram-section {
+            padding: 100px 60px;
+            background: var(--fnl-deep-black);
+        }
+        .instagram-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .instagram-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .instagram-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 209, 0.4);
+        }
+        .instagram-placeholder {
+            width: 100%;
+            height: 100%;
+        }
+        .instagram-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .instagram-overlay span {
+            font-size: 32px;
+        }
+        .instagram-item:hover .instagram-overlay {
+            opacity: 1;
+        }
+        @media (max-width: 768px) {
+            .instagram-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .instagram-section {
+                padding: 60px 30px;
+            }
+        }
+        .newsletter h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .newsletter p {
+            color: var(--fnl-light-grey);
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .newsletter-form {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .newsletter-form input {
+            flex: 1;
+            padding: 20px 25px;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: var(--fnl-charcoal);
+            color: var(--fnl-white);
+            font-size: 16px;
+            border-radius: 8px;
+        }
+        .newsletter-form input:focus { outline: none; border-color: var(--fnl-cyan); }
+        .newsletter-form button { padding: 20px 35px; border-radius: 8px; }
+        /* Footer */
+        footer {
+            background: var(--fnl-charcoal);
+            padding: 80px 60px 40px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 60px;
+        }
+        .footer-brand p {
+            color: var(--fnl-light-grey);
+            font-size: 15px;
+            margin-top: 20px;
+            line-height: 1.7;
+            max-width: 300px;
+        }
+        .footer-social {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .footer-social a {
+            width: 45px;
+            height: 45px;
+            background: var(--fnl-deep-black);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--fnl-white);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        .footer-social a:hover {
+            background: linear-gradient(135deg, var(--fnl-cyan), var(--fnl-magenta));
+            color: var(--fnl-deep-black);
+        }
+        .footer-links h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+        }
+        .footer-links ul { list-style: none; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a {
+            color: var(--fnl-light-grey);
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.3s ease;
+        }
+        .footer-links a:hover { color: var(--fnl-cyan); }
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .footer-bottom p { color: var(--fnl-light-grey); font-size: 14px; }
+        @media (max-width: 768px) {
+            footer {
+                padding: 50px 20px 30px;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+            .footer-brand p {
+                max-width: none;
+            }
+            .footer-social {
+                justify-content: center;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .hero h1 { font-size: 70px; }
+            .festival-grid { grid-template-columns: 1fr; }
+            .about { grid-template-columns: 1fr; gap: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon">FNL</div>
+            <span>FRIDAY NIGHT LIGHTS</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#hero">Home</a></li>
+            <li><a href="#festivals">Festivals</a></li>
+            <li><a href="#game">Play</a></li>
+            <li><a href="#locations">Run Club</a></li>
+            <li><a href="https://instagram.com/fridaynightlights.run" target="_blank">Instagram</a></li>
+        </ul>
+        <a href="#locations" class="nav-cta">Join a Run</a>
+        <div class="hamburger" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+    
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#hero" onclick="toggleMobileMenu()">Home</a>
+        <a href="#festivals" onclick="toggleMobileMenu()">Festivals</a>
+        <a href="#game" onclick="toggleMobileMenu()">Play</a>
+        <a href="#locations" onclick="toggleMobileMenu()">Run Club</a>
+        <a href="https://instagram.com/fridaynightlights.run" target="_blank" onclick="toggleMobileMenu()">Instagram</a>
+        <a href="#locations" class="nav-cta" style="margin-top:20px;" onclick="toggleMobileMenu()">Join a Run</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-tag">The UK's Healthiest Night Out</div>
+            <h1>FRIDAY NIGHT<br><span class="highlight">LIGHTS.</span></h1>
+            <p>Swap the hangover for endorphins. Join thousands of runners every Friday for the UK's biggest running community experience.</p>
+            <div class="hero-buttons">
+                <a href="#locations" class="btn-primary">Book Your Run</a>
+                <a href="#festivals" class="btn-secondary">2026 Festivals</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Game Section -->
+    <section class="game-section" id="game">
+        <div class="section-header">
+            <h2>Vibe Merchant Run</h2>
+            <p>Think you've got what it takes? Test your reflexes in our endless runner game!</p>
+        </div>
+        <div class="game-wrapper" style="height:700px;max-height:80vh;">
+            <iframe 
+                id="gameFrame" 
+                src="vibe-merchant-run.html" 
+                style="width:100%;height:100%;border:none;border-radius:20px;display:block;"
+                allow="autoplay"
+                loading="lazy"
+            ></iframe>
+        </div>
+        <p style="text-align:center;color:var(--fnl-light-grey);font-size:14px;margin-top:15px;">
+            <strong>Controls:</strong> SPACE / TAP to jump • Double-tap for DOUBLE JUMP! • Collect 🛡️⚡🧲 power-ups and 💰 coins
+        </p>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar">
+        <div class="stat"><div class="stat-number">50K+</div><div class="stat-label">Runners in 2025</div></div>
+        <div class="stat"><div class="stat-number">3</div><div class="stat-label">UK Cities</div></div>
+        <div class="stat"><div class="stat-number">150+</div><div class="stat-label">Events Per Year</div></div>
+        <div class="stat"><div class="stat-number">4.9★</div><div class="stat-label">Average Rating</div></div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="about-content">
+            <h2>More Than <span>A Race.</span></h2>
+            <p>Friday Night Lights started in 2019 with a simple idea: what if Friday nights could be about endorphins instead of hangovers?</p>
+            <p>Since then, we've grown into the UK's largest running community, hosting weekly runs in London, Manchester, and Liverpool – plus two flagship festival events that draw thousands.</p>
+            <div class="about-features">
+                <div class="feature"><h4>🎧 Live DJs</h4><p>Every run features live music to keep you moving</p></div>
+                <div class="feature"><h4>🌙 Night Running</h4><p>Experience the city after dark with LED batons</p></div>
+                <div class="feature"><h4>🎉 After Party</h4><p>Festival village vibes with drinks and dancing</p></div>
+                <div class="feature"><h4>👥 Community</h4><p>Meet your people at London's healthiest night out</p></div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+            <div style="background:linear-gradient(135deg,rgba(0,255,209,0.2),rgba(255,0,107,0.2));height:220px;border-radius:12px;grid-column:span 2;"></div>
+            <div style="background:linear-gradient(135deg,rgba(255,0,107,0.2),rgba(255,255,0,0.2));height:220px;border-radius:12px;"></div>
+            <div style="background:linear-gradient(135deg,rgba(255,255,0,0.2),rgba(0,255,209,0.2));height:220px;border-radius:12px;"></div>
+        </div>
+    </section>
+
+    <!-- Festivals Section -->
+    <section class="festivals" id="festivals">
+        <div class="section-header">
+            <h2>Festival Series 2026</h2>
+            <p>Bigger events. Bigger energy. Unforgettable experiences.</p>
+        </div>
+        <div class="festival-grid">
+            <div class="festival-card">
+                <span class="festival-badge">3 September 2026</span>
+                <h3>Run The Wharf</h3>
+                <p>Our flagship festival returns to Canary Wharf. 5,000 runners. One unforgettable night through London's financial district.</p>
+                <div class="festival-stats">
+                    <div><div class="festival-stat-number">5K</div><div class="festival-stat-label">Runners</div></div>
+                    <div><div class="festival-stat-number">6km</div><div class="festival-stat-label">Course</div></div>
+                    <div><div class="festival-stat-number">1</div><div class="festival-stat-label">Epic Night</div></div>
+                </div>
+                <a href="https://www.letsdothis.com/gb/e/248572?eventId=248572&occurrenceId=21111161678&preferred=true&utm_source=website&utm_medium=organic&utm_campaign=general-event-page&utm_organiser_id=171180" target="_blank" class="btn-primary">Get Early Access</a>
+            </div>
+            <div class="festival-card">
+                <span class="festival-badge" style="background:var(--fnl-magenta);">14 May 2026</span>
+                <h3>Hackney Quarter</h3>
+                <p>A 10K closed-road experience through East London's iconic streets. Double the distance. Double the energy.</p>
+                <div class="festival-stats">
+                    <div><div class="festival-stat-number">3K</div><div class="festival-stat-label">Runners</div></div>
+                    <div><div class="festival-stat-number">10km</div><div class="festival-stat-label">Course</div></div>
+                    <div><div class="festival-stat-number">NEW</div><div class="festival-stat-label">For 2026</div></div>
+                </div>
+                <a href="#" class="btn-primary">Register Interest</a>
+            </div>
+        </div>
+    </section>
+
+    
+
+    <!-- Run Club Section -->
+    <section class="locations" id="locations">
+        <div class="section-header">
+            <h2>Run Club</h2>
+            <p>Join us every Friday for the UK's healthiest night out</p>
+        </div>
+        <div class="locations-grid">
+            <div class="location-card">
+                <div class="location-icon">🏃</div>
+                <h3>Friday 7th Feb</h3>
+                <p>London</p>
+                <div class="location-schedule"><span>6:30pm</span> · Gym Nation</div>
+            </div>
+            <div class="location-card">
+                <div class="location-icon">🏃</div>
+                <h3>Friday 14th Feb</h3>
+                <p>Manchester</p>
+                <div class="location-schedule"><span>6:30pm</span> · Moda Living</div>
+            </div>
+            <div class="location-card">
+                <div class="location-icon">🏃</div>
+                <h3>Friday 21st Feb</h3>
+                <p>Liverpool</p>
+                <div class="location-schedule"><span>6:30pm</span> · Unit 7</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instagram Feed Section -->
+    <section class="instagram-section" id="instagram">
+        <div class="section-header">
+            <h2>Follow The Vibes</h2>
+            <p>@fridaynightlights.run</p>
+        </div>
+        <div class="instagram-grid">
+            <a href="https://instagram.com/fridaynightlights.run" target="_blank" class="instagram-item">
+                <div class="instagram-placeholder" style="background:linear-gradient(135deg,rgba(0,255,209,0.3),rgba(255,0,107,0.3));"></div>
+                <div class="instagram-overlay"><span>📸</span></div>
+            </a>
+            <a href="https://instagram.com/fridaynightlights.run" target="_blank" class="instagram-item">
+                <div class="instagram-placeholder" style="background:linear-gradient(135deg,rgba(255,0,107,0.3),rgba(255,255,0,0.3));"></div>
+                <div class="instagram-overlay"><span>📸</span></div>
+            </a>
+            <a href="https://instagram.com/fridaynightlights.run" target="_blank" class="instagram-item">
+                <div class="instagram-placeholder" style="background:linear-gradient(135deg,rgba(255,255,0,0.3),rgba(0,255,209,0.3));"></div>
+                <div class="instagram-overlay"><span>📸</span></div>
+            </a>
+            <a href="https://instagram.com/fridaynightlights.run" target="_blank" class="instagram-item">
+                <div class="instagram-placeholder" style="background:linear-gradient(135deg,rgba(0,255,209,0.3),rgba(157,0,255,0.3));"></div>
+                <div class="instagram-overlay"><span>📸</span></div>
+            </a>
+            <a href="https://instagram.com/fridaynightlights.run" target="_blank" class="instagram-item">
+                <div class="instagram-placeholder" style="background:linear-gradient(135deg,rgba(157,0,255,0.3),rgba(255,0,107,0.3));"></div>
+                <div class="instagram-overlay"><span>📸</span></div>
+            </a>
+            <a href="https://instagram.com/fridaynightlights.run" target="_blank" class="instagram-item">
+                <div class="instagram-placeholder" style="background:linear-gradient(135deg,rgba(255,0,107,0.3),rgba(0,255,209,0.3));"></div>
+                <div class="instagram-overlay"><span>📸</span></div>
+            </a>
+        </div>
+        <div style="text-align:center;margin-top:40px;">
+            <a href="https://instagram.com/fridaynightlights.run" target="_blank" class="btn-primary">Follow @fridaynightlights.run</a>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter">
+        <h2>Stay In The Loop</h2>
+        <p>Get early access to events, exclusive offers, and community updates</p>
+        <form class="newsletter-form" onsubmit="return false;">
+            <input type="email" placeholder="Enter your email">
+            <button type="submit" class="btn-primary">Subscribe</button>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo"><div class="logo-icon">FNL</div>FRIDAY NIGHT <span>LIGHTS</span></div>
+                <p>The UK's first running nightclub. Swap the hangover for endorphins every Friday.</p>
+                <div class="footer-social"><a href="#">IG</a><a href="#">TT</a><a href="#">YT</a><a href="#">SC</a></div>
+            </div>
+            <div class="footer-links"><h4>Events</h4><ul><li><a href="#festivals">Festivals</a></li><li><a href="#locations">Run Club</a></li></ul></div>
+            <div class="footer-links"><h4>Join</h4><ul><li><a href="#">Become a Vibe Merchant</a></li><li><a href="#">Corporate Events</a></li></ul></div>
+            <div class="footer-links"><h4>Info</h4><ul><li><a href="#">About Us</a></li><li><a href="#">FAQs</a></li><li><a href="#">Contact</a></li><li><a href="#">Merch</a></li></ul></div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Friday Night Lights. All rights reserved.</p>
+            <div style="display:flex;gap:30px;"><a href="#" style="color:var(--fnl-light-grey);text-decoration:none;font-size:14px;">Privacy</a><a href="#" style="color:var(--fnl-light-grey);text-decoration:none;font-size:14px;">Terms</a></div>
+        </div>
+    </footer>
+    
+    <script>
+        function toggleMobileMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const mobileMenu = document.getElementById('mobileMenu');
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburger = document.querySelector('.hamburger');
+            if (mobileMenu.classList.contains('active') && !mobileMenu.contains(e.target) && !hamburger.contains(e.target)) {
+                toggleMobileMenu();
+            }
+        });
+    </script>
+</body>
