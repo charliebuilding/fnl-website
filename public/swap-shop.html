@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swap Shop | Friday Night Lights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --fnl-cyan: #00FFD1;
+            --fnl-magenta: #FF006B;
+            --fnl-yellow: #FFFF00;
+            --fnl-deep-black: #0A0A0A;
+            --fnl-charcoal: #1A1A1A;
+            --fnl-white: #FFFFFF;
+            --fnl-light-grey: #B0B0B0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--fnl-deep-black);
+            color: var(--fnl-white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: linear-gradient(180deg, rgba(10,10,10,0.98) 0%, rgba(10,10,10,0) 100%);
+            backdrop-filter: blur(10px);
+        }
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--fnl-white);
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--fnl-cyan), var(--fnl-magenta), var(--fnl-yellow));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--fnl-deep-black);
+        }
+        .logo span {
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta), var(--fnl-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--fnl-white);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            transition: width 0.3s ease;
+        }
+        .nav-links a:hover::after { width: 100%; }
+        .nav-links a:hover { color: var(--fnl-cyan); }
+        .nav-links a.active { color: var(--fnl-cyan); }
+        .nav-links a.active::after { width: 100%; }
+        .nav-cta {
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            color: var(--fnl-deep-black);
+            padding: 14px 32px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .nav-cta:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 209, 0.5);
+            transform: translateY(-2px);
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--fnl-white);
+            transition: all 0.3s ease;
+        }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -6px); }
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(10, 10, 10, 0.98);
+            z-index: 999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+        .mobile-menu.active { display: flex; }
+        .mobile-menu a {
+            color: var(--fnl-white);
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: color 0.3s;
+        }
+        .mobile-menu a:hover { color: var(--fnl-cyan); }
+
+        /* Swap Shop Embed */
+        .swap-shop-embed {
+            padding-top: 80px;
+            min-height: calc(100vh - 80px);
+        }
+        .swap-shop-embed iframe {
+            width: 100%;
+            height: calc(100vh - 80px);
+            border: none;
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--fnl-charcoal);
+            padding: 80px 60px 40px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 60px;
+        }
+        .footer-brand p {
+            color: var(--fnl-light-grey);
+            font-size: 15px;
+            margin-top: 20px;
+            line-height: 1.7;
+            max-width: 300px;
+        }
+        .footer-social {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .footer-social a {
+            width: 45px;
+            height: 45px;
+            background: var(--fnl-deep-black);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--fnl-white);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+        .footer-social a:hover {
+            background: linear-gradient(135deg, var(--fnl-cyan), var(--fnl-magenta));
+            color: var(--fnl-deep-black);
+        }
+        .footer-links h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+        }
+        .footer-links ul { list-style: none; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a {
+            color: var(--fnl-light-grey);
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.3s ease;
+        }
+        .footer-links a:hover { color: var(--fnl-cyan); }
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .footer-bottom p { color: var(--fnl-light-grey); font-size: 14px; }
+
+        @media (max-width: 768px) {
+            nav { padding: 15px 20px; }
+            .nav-links, .nav-cta { display: none; }
+            .hamburger { display: flex; }
+            .logo { font-size: 18px; }
+            .logo-icon { width: 32px; height: 32px; font-size: 16px; }
+            footer { padding: 50px 20px 30px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 30px; text-align: center; }
+            .footer-brand p { max-width: none; }
+            .footer-social { justify-content: center; }
+            .footer-bottom { flex-direction: column; gap: 15px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-icon">FNL</div>
+            FRIDAY NIGHT <span>LIGHTS</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/#festivals">Festivals</a></li>
+            <li><a href="/#locations">Run Club</a></li>
+            <li><a href="/swap-shop" class="active">Swap Shop</a></li>
+            <li><a href="https://instagram.com/fridaynightlights.run" target="_blank">Instagram</a></li>
+        </ul>
+        <a href="/#locations" class="nav-cta">Join a Run</a>
+        <div class="hamburger" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/" onclick="toggleMobileMenu()">Home</a>
+        <a href="/#festivals" onclick="toggleMobileMenu()">Festivals</a>
+        <a href="/#locations" onclick="toggleMobileMenu()">Run Club</a>
+        <a href="/swap-shop" onclick="toggleMobileMenu()">Swap Shop</a>
+        <a href="https://instagram.com/fridaynightlights.run" target="_blank" onclick="toggleMobileMenu()">Instagram</a>
+        <a href="/#locations" class="nav-cta" style="margin-top:20px;" onclick="toggleMobileMenu()">Join a Run</a>
+    </div>
+
+    <!-- Swap Shop Embed -->
+    <div class="swap-shop-embed">
+        <iframe src="https://fnl-swap-shop.netlify.app" title="FNL Swap Shop" allow="clipboard-write"></iframe>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo"><div class="logo-icon">FNL</div>FRIDAY NIGHT <span>LIGHTS</span></div>
+                <p>The UK's first running nightclub. Swap the hangover for endorphins every Friday.</p>
+                <div class="footer-social"><a href="#">IG</a><a href="#">TT</a><a href="#">YT</a><a href="#">SC</a></div>
+            </div>
+            <div class="footer-links"><h4>Events</h4><ul><li><a href="/#festivals">Festivals</a></li><li><a href="/#locations">Run Club</a></li><li><a href="/swap-shop">Swap Shop</a></li></ul></div>
+            <div class="footer-links"><h4>Join</h4><ul><li><a href="#">Become a Vibe Merchant</a></li><li><a href="#">Corporate Events</a></li></ul></div>
+            <div class="footer-links"><h4>Info</h4><ul><li><a href="#">About Us</a></li><li><a href="#">FAQs</a></li><li><a href="#">Contact</a></li><li><a href="#">Merch</a></li></ul></div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Friday Night Lights. All rights reserved.</p>
+            <div style="display:flex;gap:30px;"><a href="#" style="color:var(--fnl-light-grey);text-decoration:none;font-size:14px;">Privacy</a><a href="#" style="color:var(--fnl-light-grey);text-decoration:none;font-size:14px;">Terms</a></div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const mobileMenu = document.getElementById('mobileMenu');
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        }
+        document.addEventListener('click', function(e) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburger = document.querySelector('.hamburger');
+            if (mobileMenu.classList.contains('active') && !mobileMenu.contains(e.target) && !hamburger.contains(e.target)) {
+                toggleMobileMenu();
+            }
+        });
+    </script>
+</body>
+</html>
