@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNL Festival Series 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --fnl-deep-black: #0A0A0A;
+            --fnl-charcoal: #1A1A1A;
+            --fnl-white: #FFFFFF;
+            --fnl-light-grey: #B0B0B0;
+            --fnl-cyan: #00FFD1;
+            --fnl-magenta: #FF006B;
+            --fnl-yellow: #FFFF00;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: transparent;
+            color: var(--fnl-white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .festivals {
+            padding: 80px 40px;
+            background: linear-gradient(180deg, #0d0520 0%, var(--fnl-deep-black) 40%, #0d0520 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .festivals::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(0, 255, 209, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(255, 0, 107, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta), var(--fnl-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: var(--fnl-light-grey);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .festival-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 32px;
+            max-width: 960px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .festival-card {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 40px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .festival-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+        }
+
+        .festival-card:nth-child(2)::before {
+            background: linear-gradient(90deg, var(--fnl-magenta), var(--fnl-yellow));
+        }
+
+        .festival-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0, 255, 209, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 255, 209, 0.05);
+        }
+
+        .festival-card:nth-child(2):hover {
+            border-color: rgba(255, 0, 107, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 0, 107, 0.05);
+        }
+
+        .festival-badge {
+            display: inline-block;
+            background: var(--fnl-cyan);
+            color: var(--fnl-deep-black);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 20px;
+        }
+
+        .festival-card:nth-child(2) .festival-badge {
+            background: var(--fnl-magenta);
+            color: var(--fnl-white);
+        }
+
+        .festival-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(24px, 3vw, 32px);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .festival-card p {
+            color: var(--fnl-light-grey);
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        .festival-stats {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .festival-stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--fnl-cyan);
+        }
+
+        .festival-card:nth-child(2) .festival-stat-number {
+            color: var(--fnl-magenta);
+        }
+
+        .festival-stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--fnl-light-grey);
+            margin-top: 4px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(90deg, var(--fnl-cyan), var(--fnl-magenta));
+            color: var(--fnl-deep-black);
+            padding: 16px 36px;
+            border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 209, 0.4);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .festivals {
+                padding: 60px 20px;
+            }
+
+            .section-header {
+                margin-bottom: 40px;
+            }
+
+            .festival-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .festival-card {
+                padding: 32px 24px;
+            }
+
+            .festival-stats {
+                gap: 16px;
+            }
+
+            .festival-stat-number {
+                font-size: 18px;
+            }
+
+            .btn-primary {
+                width: 100%;
+                text-align: center;
+                padding: 16px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="festivals" id="festivals">
+        <div class="section-header">
+            <h2>Festival Series 2026</h2>
+            <p>Bigger events. Bigger energy. Unforgettable experiences.</p>
+        </div>
+        <div class="festival-grid">
+            <div class="festival-card">
+                <span class="festival-badge">3 September 2026</span>
+                <h3>Run The Wharf</h3>
+                <p>Our flagship festival returns to Canary Wharf. 5,000 runners. One unforgettable night through London's financial district.</p>
+                <div class="festival-stats">
+                    <div>
+                        <div class="festival-stat-number">5K</div>
+                        <div class="festival-stat-label">Runners</div>
+                    </div>
+                    <div>
+                        <div class="festival-stat-number">6km</div>
+                        <div class="festival-stat-label">Course</div>
+                    </div>
+                    <div>
+                        <div class="festival-stat-number">1</div>
+                        <div class="festival-stat-label">Epic Night</div>
+                    </div>
+                </div>
+                <a href="https://www.fridaynightlights.run/tickets/" class="btn-primary" target="_top">Book Your Run</a>
+            </div>
+            <div class="festival-card">
+                <span class="festival-badge">14 May 2026</span>
+                <h3>Hackney Quarter</h3>
+                <p>A 10K closed-road experience through East London's iconic streets. Double the distance. Double the energy.</p>
+                <div class="festival-stats">
+                    <div>
+                        <div class="festival-stat-number">3K</div>
+                        <div class="festival-stat-label">Runners</div>
+                    </div>
+                    <div>
+                        <div class="festival-stat-number">10km</div>
+                        <div class="festival-stat-label">Course</div>
+                    </div>
+                    <div>
+                        <div class="festival-stat-number">NEW</div>
+                        <div class="festival-stat-label">For 2026</div>
+                    </div>
+                </div>
+                <a href="https://www.fridaynightlights.run/tickets/" class="btn-primary" target="_top">Book Your Run</a>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
