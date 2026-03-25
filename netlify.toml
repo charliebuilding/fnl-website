@@ -10,3 +10,18 @@
   from = "/swap-shop"
   to = "/swap-shop.html"
   status = 200
+
+[[redirects]]
+  from = "/race-league"
+  to = "/race-league/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/volunteers"
+  to = "/volunteers/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/volunteers/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

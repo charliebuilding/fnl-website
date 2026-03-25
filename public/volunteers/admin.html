@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — FNL Volunteers</title>
+  <link rel="stylesheet" href="css/volunteers.css">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <header class="vol-header">
+    <a href="/volunteers/" class="vol-header__logo">FNL VOLUNTEERS</a>
+    <nav class="vol-header__nav">
+      <a href="/volunteers/" class="vol-header__link">Events</a>
+      <a href="/volunteers/dashboard.html" class="vol-header__link">Dashboard</a>
+      <span class="vol-header__user" id="userName"></span>
+      <button class="vol-btn vol-btn--secondary vol-btn--small" id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <div class="vol-container">
+    <h1 style="margin-bottom:1.5rem">Admin Dashboard</h1>
+
+    <div class="vol-tabs" id="tabs">
+      <button class="vol-tab vol-tab--active" data-tab="events">Events</button>
+      <button class="vol-tab" data-tab="volunteers">Volunteers</button>
+      <button class="vol-tab" data-tab="signups">Signups</button>
+      <button class="vol-tab" data-tab="comms">Communications</button>
+    </div>
+
+    <!-- Events Tab -->
+    <div id="tab-events" class="tab-content">
+      <div class="vol-section__header">
+        <h2>Manage Events</h2>
+        <button class="vol-btn vol-btn--primary vol-btn--small" id="createEventBtn">Create Event</button>
+      </div>
+      <div id="eventsList">
+        <div class="vol-loader"><div class="vol-loader__spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Volunteers Tab -->
+    <div id="tab-volunteers" class="tab-content" style="display:none">
+      <h2 style="margin-bottom:1rem">All Volunteers</h2>
+      <div class="vol-search">
+        <span class="vol-search__icon">&#128269;</span>
+        <input class="vol-search__input" id="volSearch" placeholder="Search volunteers...">
+      </div>
+      <div id="volunteersList"></div>
+    </div>
+
+    <!-- Signups Tab -->
+    <div id="tab-signups" class="tab-content" style="display:none">
+      <h2 style="margin-bottom:1rem">Event Signups</h2>
+      <div class="vol-field" style="margin-bottom:1rem">
+        <select class="vol-select" id="signupEventSelect">
+          <option value="">Select an event...</option>
+        </select>
+      </div>
+      <div id="signupStats" class="vol-stats" style="display:none"></div>
+      <div id="signupsList"></div>
+    </div>
+
+    <!-- Comms Tab -->
+    <div id="tab-comms" class="tab-content" style="display:none">
+      <h2 style="margin-bottom:1rem">Send Communication</h2>
+      <form class="vol-form vol-card" id="commsForm">
+        <div class="vol-field">
+          <label class="vol-label">Recipients</label>
+          <select class="vol-select" id="commsFilter">
+            <option value="all">All Volunteers</option>
+          </select>
+        </div>
+        <div class="vol-field">
+          <label class="vol-label">Subject</label>
+          <input class="vol-input" id="commsSubject" placeholder="Email subject" required>
+        </div>
+        <div class="vol-field">
+          <label class="vol-label">Message</label>
+          <textarea class="vol-textarea" id="commsBody" placeholder="Write your message..." rows="6" required></textarea>
+        </div>
+        <button type="submit" class="vol-btn vol-btn--primary" id="commsSendBtn">Send Email</button>
+      </form>
+    </div>
+
+    <!-- Create/Edit Event Modal -->
+    <div class="vol-modal-overlay" id="eventModal" style="display:none">
+      <div class="vol-modal" style="max-width:600px">
+        <h3 class="vol-modal__title" id="eventModalTitle">Create Event</h3>
+        <form class="vol-form" id="eventForm">
+          <div class="vol-field">
+            <label class="vol-label">Event Name *</label>
+            <input class="vol-input" id="evName" required placeholder="e.g. FNL Battersea Park 5K">
+          </div>
+          <div class="vol-row">
+            <div class="vol-field">
+              <label class="vol-label">Date *</label>
+              <input class="vol-input" type="date" id="evDate" required>
+            </div>
+            <div class="vol-field">
+              <label class="vol-label">Event Time</label>
+              <input class="vol-input" type="time" id="evTime">
+            </div>
+          </div>
+          <div class="vol-field">
+            <label class="vol-label">Location *</label>
+            <input class="vol-input" id="evLocation" required placeholder="e.g. Battersea Park, London">
+          </div>
+          <div class="vol-row">
+            <div class="vol-field">
+              <label class="vol-label">Briefing Time</label>
+              <input class="vol-input" type="time" id="evBriefingTime">
+            </div>
+            <div class="vol-field">
+              <label class="vol-label">Briefing Location</label>
+              <input class="vol-input" id="evBriefingLocation" placeholder="e.g. Main tent">
+            </div>
+          </div>
+          <div class="vol-row">
+            <div class="vol-field">
+              <label class="vol-label">Max Volunteers</label>
+              <input class="vol-input" type="number" id="evMaxVol" value="80">
+            </div>
+            <div class="vol-field">
+              <label class="vol-label">Auto-Confirm Signups</label>
+              <select class="vol-select" id="evAutoConfirm">
+                <option value="false">No — manual review</option>
+                <option value="true">Yes — auto-confirm</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="vol-field">
+            <label class="vol-label">Roles</label>
+            <div id="rolesContainer"></div>
+            <button type="button" class="vol-btn vol-btn--secondary vol-btn--small" id="addRoleBtn" style="margin-top:0.5rem">+ Add Role</button>
+          </div>
+
+          <div class="vol-modal__actions">
+            <button type="button" class="vol-btn vol-btn--secondary" id="cancelEventBtn">Cancel</button>
+            <button type="submit" class="vol-btn vol-btn--primary" id="saveEventBtn">Save Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAdmin, logout } from './js/vol-auth.js';
+    import * as api from './js/vol-api.js';
+    import { formatDate, formatTime, escapeHtml, showToast, statusBadge, roleCategory } from './js/vol-utils.js';
+
+    const session = requireAdmin();
+    if (!session) throw new Error('Not admin');
+
+    document.getElementById('userName').textContent = session.firstName;
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // Tabs
+    document.querySelectorAll('.vol-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.vol-tab').forEach(t => t.classList.remove('vol-tab--active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        tab.classList.add('vol-tab--active');
+        document.getElementById(`tab-${tab.dataset.tab}`).style.display = 'block';
+
+        if (tab.dataset.tab === 'volunteers') loadVolunteers();
+        if (tab.dataset.tab === 'signups') loadSignupEventSelector();
+        if (tab.dataset.tab === 'comms') loadCommsEventSelector();
+      });
+    });
+
+    // ============ EVENTS TAB ============
+    let allEvents = [];
+
+    async function loadEvents() {
+      const list = document.getElementById('eventsList');
+      try {
+        const data = await api.getEvents();
+        allEvents = data.events || [];
+        if (allEvents.length === 0) {
+          list.innerHTML = '<div class="vol-empty"><p>No events yet. Create your first!</p></div>';
+          return;
+        }
+        list.innerHTML = allEvents.map(ev => `
+          <div class="vol-card" style="margin-bottom:0.75rem">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <h3 class="vol-card__title">${escapeHtml(ev.name)}</h3>
+                <p class="vol-card__meta">${formatDate(ev.date)} &middot; ${escapeHtml(ev.location)} &middot; ${(ev.roles || []).length} roles</p>
+              </div>
+              <div style="display:flex;gap:0.5rem;align-items:center">
+                <span class="vol-badge" style="--badge-color:${ev.status === 'open' ? 'var(--fnl-cyan)' : ev.status === 'active' ? 'var(--fnl-yellow)' : 'var(--fnl-light-grey)'}">${ev.status}</span>
+                <button class="vol-btn vol-btn--secondary vol-btn--small edit-event-btn" data-id="${escapeHtml(ev.id)}">Edit</button>
+                ${ev.status === 'draft' ? `<button class="vol-btn vol-btn--primary vol-btn--small open-event-btn" data-id="${escapeHtml(ev.id)}">Open</button>` : ''}
+                ${ev.status === 'open' ? `<button class="vol-btn vol-btn--secondary vol-btn--small" style="border-color:var(--fnl-yellow);color:var(--fnl-yellow)" onclick="window.location='/volunteers/checkin.html?id=${escapeHtml(ev.id)}'">Check-in</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        // Bind edit buttons
+        list.querySelectorAll('.edit-event-btn').forEach(btn => {
+          btn.addEventListener('click', () => editEvent(btn.dataset.id));
+        });
+        list.querySelectorAll('.open-event-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api.updateEvent(btn.dataset.id, { status: 'open' });
+              showToast('Event opened!');
+              loadEvents();
+            } catch (err) { showToast(err.message, 'error'); }
+          });
+        });
+      } catch (err) {
+        list.innerHTML = `<div class="vol-empty"><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    // Create / Edit event modal
+    let editingEventId = null;
+
+    document.getElementById('createEventBtn').addEventListener('click', () => {
+      editingEventId = null;
+      document.getElementById('eventModalTitle').textContent = 'Create Event';
+      document.getElementById('eventForm').reset();
+      document.getElementById('rolesContainer').innerHTML = '';
+      addRoleRow();
+      document.getElementById('eventModal').style.display = 'flex';
+    });
+
+    document.getElementById('cancelEventBtn').addEventListener('click', () => {
+      document.getElementById('eventModal').style.display = 'none';
+    });
+
+    function editEvent(eventId) {
+      const ev = allEvents.find(e => e.id === eventId);
+      if (!ev) return;
+      editingEventId = eventId;
+      document.getElementById('eventModalTitle').textContent = 'Edit Event';
+      document.getElementById('evName').value = ev.name;
+      document.getElementById('evDate').value = ev.date;
+      document.getElementById('evTime').value = ev.time || '';
+      document.getElementById('evLocation').value = ev.location;
+      document.getElementById('evBriefingTime').value = ev.briefingTime || '';
+      document.getElementById('evBriefingLocation').value = ev.briefingLocation || '';
+      document.getElementById('evMaxVol').value = ev.maxVolunteers || 80;
+      document.getElementById('evAutoConfirm').value = String(ev.autoConfirm || false);
+
+      const container = document.getElementById('rolesContainer');
+      container.innerHTML = '';
+      (ev.roles || []).forEach(r => addRoleRow(r));
+      if (!ev.roles || ev.roles.length === 0) addRoleRow();
+
+      document.getElementById('eventModal').style.display = 'flex';
+    }
+
+    function addRoleRow(data = null) {
+      const container = document.getElementById('rolesContainer');
+      const idx = container.children.length;
+      const div = document.createElement('div');
+      div.className = 'vol-card';
+      div.style.marginBottom = '0.5rem';
+      div.style.padding = '1rem';
+      div.innerHTML = `
+        <div class="vol-row">
+          <div class="vol-field"><label class="vol-label">Role Name</label><input class="vol-input role-name" value="${escapeHtml(data?.name || '')}"></div>
+          <div class="vol-field"><label class="vol-label">Category</label>
+            <select class="vol-select role-category">
+              ${['marshal','water-station','registration','finish-line','medical','logistics','photographer','other'].map(c =>
+                `<option value="${c}" ${data?.category === c ? 'selected' : ''}>${c}</option>`
+              ).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="vol-row" style="margin-top:0.5rem">
+          <div class="vol-field"><label class="vol-label">Slots</label><input class="vol-input role-slots" type="number" value="${data?.maxSlots || 4}" min="1"></div>
+          <div class="vol-field"><label class="vol-label">Shift Start</label><input class="vol-input role-start" type="time" value="${data?.shiftStart || ''}"></div>
+          <div class="vol-field"><label class="vol-label">Shift End</label><input class="vol-input role-end" type="time" value="${data?.shiftEnd || ''}"></div>
+        </div>
+        <div class="vol-field" style="margin-top:0.5rem"><label class="vol-label">Description</label><input class="vol-input role-desc" value="${escapeHtml(data?.description || '')}"></div>
+        <button type="button" class="vol-btn vol-btn--danger vol-btn--small remove-role-btn" style="margin-top:0.5rem">Remove</button>
+      `;
+      container.appendChild(div);
+      div.querySelector('.remove-role-btn').addEventListener('click', () => div.remove());
+    }
+
+    document.getElementById('addRoleBtn').addEventListener('click', () => addRoleRow());
+
+    document.getElementById('eventForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('saveEventBtn');
+      btn.disabled = true;
+
+      const roles = [...document.querySelectorAll('#rolesContainer > div')].map((div, i) => ({
+        id: `role-${i}`,
+        name: div.querySelector('.role-name').value,
+        category: div.querySelector('.role-category').value,
+        maxSlots: parseInt(div.querySelector('.role-slots').value) || 4,
+        shiftStart: div.querySelector('.role-start').value,
+        shiftEnd: div.querySelector('.role-end').value,
+        description: div.querySelector('.role-desc').value,
+      })).filter(r => r.name);
+
+      const payload = {
+        name: document.getElementById('evName').value,
+        date: document.getElementById('evDate').value,
+        time: document.getElementById('evTime').value,
+        location: document.getElementById('evLocation').value,
+        briefingTime: document.getElementById('evBriefingTime').value,
+        briefingLocation: document.getElementById('evBriefingLocation').value,
+        maxVolunteers: parseInt(document.getElementById('evMaxVol').value) || 80,
+        autoConfirm: document.getElementById('evAutoConfirm').value === 'true',
+        roles,
+      };
+
+      try {
+        if (editingEventId) {
+          await api.updateEvent(editingEventId, payload);
+          showToast('Event updated!');
+        } else {
+          await api.createEvent(payload);
+          showToast('Event created!');
+        }
+        document.getElementById('eventModal').style.display = 'none';
+        loadEvents();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // ============ VOLUNTEERS TAB ============
+    let allVolunteers = [];
+
+    async function loadVolunteers() {
+      const list = document.getElementById('volunteersList');
+      list.innerHTML = '<div class="vol-loader"><div class="vol-loader__spinner"></div></div>';
+      try {
+        const data = await api.adminGetVolunteers();
+        allVolunteers = data.volunteers || [];
+        renderVolunteers(allVolunteers);
+      } catch (err) {
+        list.innerHTML = `<div class="vol-empty"><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function renderVolunteers(vols) {
+      const list = document.getElementById('volunteersList');
+      if (vols.length === 0) {
+        list.innerHTML = '<div class="vol-empty"><p>No volunteers found.</p></div>';
+        return;
+      }
+      list.innerHTML = `
+        <table class="vol-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Events</th><th>Hours</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${vols.map(v => `
+              <tr>
+                <td>${escapeHtml(v.firstName)} ${escapeHtml(v.lastName)}</td>
+                <td>${escapeHtml(v.email)}</td>
+                <td>${v.phone || '–'}</td>
+                <td><span class="vol-badge" style="--badge-color:${v.role === 'admin' ? 'var(--fnl-magenta)' : 'var(--fnl-cyan)'}">${v.role}</span></td>
+                <td>${v.eventsCompleted || 0}</td>
+                <td>${v.totalHours || 0}</td>
+                <td>
+                  ${v.role !== 'admin' ? `<button class="vol-btn vol-btn--secondary vol-btn--small promote-btn" data-id="${v.id}">Make Admin</button>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      list.querySelectorAll('.promote-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Promote this volunteer to admin?')) return;
+          try {
+            await api.adminUpdateVolunteer(btn.dataset.id, { role: 'admin' });
+            showToast('Promoted to admin!');
+            loadVolunteers();
+          } catch (err) { showToast(err.message, 'error'); }
+        });
+      });
+    }
+
+    document.getElementById('volSearch').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      renderVolunteers(allVolunteers.filter(v =>
+        `${v.firstName} ${v.lastName} ${v.email}`.toLowerCase().includes(q)
+      ));
+    });
+
+    // ============ SIGNUPS TAB ============
+    async function loadSignupEventSelector() {
+      const select = document.getElementById('signupEventSelect');
+      if (allEvents.length === 0) {
+        const data = await api.getEvents();
+        allEvents = data.events || [];
+      }
+      select.innerHTML = '<option value="">Select an event...</option>' +
+        allEvents.map(ev => `<option value="${ev.id}">${escapeHtml(ev.name)} (${formatDate(ev.date)})</option>`).join('');
+    }
+
+    document.getElementById('signupEventSelect').addEventListener('change', async (e) => {
+      const eventId = e.target.value;
+      if (!eventId) {
+        document.getElementById('signupStats').style.display = 'none';
+        document.getElementById('signupsList').innerHTML = '';
+        return;
+      }
+      loadSignups(eventId);
+    });
+
+    async function loadSignups(eventId) {
+      const list = document.getElementById('signupsList');
+      const statsDiv = document.getElementById('signupStats');
+      list.innerHTML = '<div class="vol-loader"><div class="vol-loader__spinner"></div></div>';
+
+      try {
+        const [signupData, statsData] = await Promise.all([
+          api.adminGetSignups(eventId),
+          api.adminGetStats(eventId),
+        ]);
+
+        const signups = signupData.signups || [];
+        const stats = statsData.stats;
+
+        // Stats
+        statsDiv.style.display = 'grid';
+        statsDiv.innerHTML = `
+          <div class="vol-stat"><div class="vol-stat__number">${stats.total}</div><div class="vol-stat__label">Total</div></div>
+          <div class="vol-stat"><div class="vol-stat__number">${stats.confirmed}</div><div class="vol-stat__label">Confirmed</div></div>
+          <div class="vol-stat"><div class="vol-stat__number">${stats.pending}</div><div class="vol-stat__label">Pending</div></div>
+          <div class="vol-stat"><div class="vol-stat__number">${stats.checkedIn}</div><div class="vol-stat__label">Checked In</div></div>
+        `;
+
+        // Export button
+        let exportHtml = `<div style="margin-bottom:1rem;text-align:right">
+          <button class="vol-btn vol-btn--secondary vol-btn--small" id="exportCsvBtn">Export CSV</button>
+        </div>`;
+
+        if (signups.length === 0) {
+          list.innerHTML = exportHtml + '<div class="vol-empty"><p>No signups yet.</p></div>';
+        } else {
+          list.innerHTML = exportHtml + `
+            <table class="vol-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Checked In</th><th>Hours</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${signups.map(s => `
+                  <tr>
+                    <td>${escapeHtml(s.volunteerName)}</td>
+                    <td>${escapeHtml(s.volunteerEmail)}</td>
+                    <td>${escapeHtml(s.roleName)}</td>
+                    <td>${statusBadge(s.status)}</td>
+                    <td>${s.checkedIn ? '<span style="color:var(--fnl-cyan)">Yes</span>' : 'No'}</td>
+                    <td>${s.hoursLogged ?? '–'}</td>
+                    <td style="white-space:nowrap">
+                      ${s.status === 'pending' ? `
+                        <button class="vol-btn vol-btn--primary vol-btn--small confirm-btn" data-id="${s.id}">Confirm</button>
+                        <button class="vol-btn vol-btn--danger vol-btn--small decline-btn" data-id="${s.id}">Decline</button>
+                      ` : ''}
+                      <button class="vol-btn vol-btn--secondary vol-btn--small hours-btn" data-id="${s.id}" data-hours="${s.hoursLogged || ''}">Log Hours</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+
+        // Bind buttons
+        list.querySelectorAll('.confirm-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api.adminUpdateSignup(btn.dataset.id, { status: 'confirmed' });
+              showToast('Confirmed!');
+              loadSignups(eventId);
+            } catch (err) { showToast(err.message, 'error'); }
+          });
+        });
+        list.querySelectorAll('.decline-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api.adminUpdateSignup(btn.dataset.id, { status: 'declined' });
+              showToast('Declined');
+              loadSignups(eventId);
+            } catch (err) { showToast(err.message, 'error'); }
+          });
+        });
+        list.querySelectorAll('.hours-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const hours = prompt('Enter hours worked:', btn.dataset.hours || '');
+            if (hours === null) return;
+            try {
+              await api.adminLogHours(btn.dataset.id, parseFloat(hours));
+              showToast('Hours logged!');
+              loadSignups(eventId);
+            } catch (err) { showToast(err.message, 'error'); }
+          });
+        });
+
+        document.getElementById('exportCsvBtn')?.addEventListener('click', async () => {
+          try {
+            const token = localStorage.getItem('fnl_vol_session');
+            const res = await fetch(`/api/volunteers/admin?action=export&eventId=${eventId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${eventId}-volunteers.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+          } catch (err) { showToast(err.message, 'error'); }
+        });
+      } catch (err) {
+        list.innerHTML = `<div class="vol-empty"><p>${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    // ============ COMMS TAB ============
+    async function loadCommsEventSelector() {
+      if (allEvents.length === 0) {
+        const data = await api.getEvents();
+        allEvents = data.events || [];
+      }
+      const select = document.getElementById('commsFilter');
+      select.innerHTML = '<option value="all">All Volunteers</option>' +
+        allEvents.map(ev => `<option value="event:${ev.id}">Event: ${escapeHtml(ev.name)}</option>`).join('');
+    }
+
+    document.getElementById('commsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('commsSendBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        await api.sendComms({
+          filter: document.getElementById('commsFilter').value,
+          subject: document.getElementById('commsSubject').value,
+          body: document.getElementById('commsBody').value,
+        });
+        showToast('Emails sent!');
+        document.getElementById('commsForm').reset();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Email';
+      }
+    });
+
+    // Init
+    loadEvents();
+  </script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — FNL Volunteers</title>
+  <link rel="stylesheet" href="css/volunteers.css">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <header class="vol-header">
+    <a href="/volunteers/" class="vol-header__logo">FNL VOLUNTEERS</a>
+    <nav class="vol-header__nav">
+      <a href="/volunteers/" class="vol-header__link">Events</a>
+      <a href="#" class="vol-header__link" id="adminLink" style="display:none">Admin</a>
+      <span class="vol-header__user" id="userName"></span>
+      <button class="vol-btn vol-btn--secondary vol-btn--small" id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <div class="vol-container">
+    <h1 style="margin-bottom:0.5rem" id="greeting"></h1>
+    <p class="subtitle" style="margin-bottom:2rem">Your volunteer dashboard</p>
+
+    <!-- Stats -->
+    <div class="vol-stats" id="stats">
+      <div class="vol-stat"><div class="vol-stat__number" id="statEvents">-</div><div class="vol-stat__label">Events</div></div>
+      <div class="vol-stat"><div class="vol-stat__number" id="statHours">-</div><div class="vol-stat__label">Hours</div></div>
+      <div class="vol-stat"><div class="vol-stat__number" id="statUpcoming">-</div><div class="vol-stat__label">Upcoming</div></div>
+    </div>
+
+    <!-- Upcoming Shifts -->
+    <div class="vol-section">
+      <h2 style="margin-bottom:1rem">Upcoming Shifts</h2>
+      <div id="upcomingList">
+        <div class="vol-loader"><div class="vol-loader__spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Past Events -->
+    <div class="vol-section">
+      <h2 style="margin-bottom:1rem">History</h2>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- Profile -->
+    <div class="vol-section">
+      <div class="vol-section__header">
+        <h2>Profile</h2>
+        <button class="vol-btn vol-btn--secondary vol-btn--small" id="editProfileBtn">Edit</button>
+      </div>
+      <div id="profileView" class="vol-card"></div>
+      <div id="profileEdit" style="display:none">
+        <form class="vol-form vol-card" id="profileForm">
+          <div class="vol-row">
+            <div class="vol-field">
+              <label class="vol-label">First Name</label>
+              <input class="vol-input" id="pFirstName">
+            </div>
+            <div class="vol-field">
+              <label class="vol-label">Last Name</label>
+              <input class="vol-input" id="pLastName">
+            </div>
+          </div>
+          <div class="vol-field">
+            <label class="vol-label">Phone</label>
+            <input class="vol-input" id="pPhone">
+          </div>
+          <div class="vol-row">
+            <div class="vol-field">
+              <label class="vol-label">Emergency Contact</label>
+              <input class="vol-input" id="pEmName">
+            </div>
+            <div class="vol-field">
+              <label class="vol-label">Emergency Phone</label>
+              <input class="vol-input" id="pEmPhone">
+            </div>
+          </div>
+          <div class="vol-field">
+            <label class="vol-label">T-Shirt Size</label>
+            <select class="vol-select" id="pTshirt">
+              <option value="">Select</option>
+              <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:0.75rem">
+            <button type="submit" class="vol-btn vol-btn--primary vol-btn--small">Save</button>
+            <button type="button" class="vol-btn vol-btn--secondary vol-btn--small" id="cancelEditBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, isAdmin, logout } from './js/vol-auth.js';
+    import { getProfile, updateProfile } from './js/vol-api.js';
+    import { formatDate, escapeHtml, showToast, statusBadge } from './js/vol-utils.js';
+
+    const session = requireAuth();
+    if (!session) throw new Error('Not authenticated');
+
+    document.getElementById('userName').textContent = session.firstName;
+    document.getElementById('greeting').textContent = `Hey, ${session.firstName}`;
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    if (isAdmin()) {
+      const link = document.getElementById('adminLink');
+      link.style.display = 'inline';
+      link.href = '/volunteers/admin.html';
+    }
+
+    let profileData = null;
+
+    async function loadDashboard() {
+      try {
+        const data = await getProfile();
+        profileData = data;
+        const vol = data.volunteer;
+        const history = data.history || [];
+
+        const today = new Date().toISOString().split('T')[0];
+        const upcoming = history.filter(h => h.eventDate >= today && h.status !== 'cancelled' && h.status !== 'declined');
+        const past = history.filter(h => h.eventDate < today || h.status === 'cancelled' || h.status === 'declined');
+
+        // Stats
+        document.getElementById('statEvents').textContent = vol.eventsCompleted || 0;
+        document.getElementById('statHours').textContent = vol.totalHours || 0;
+        document.getElementById('statUpcoming').textContent = upcoming.length;
+
+        // Upcoming
+        const upcomingList = document.getElementById('upcomingList');
+        if (upcoming.length === 0) {
+          upcomingList.innerHTML = '<div class="vol-empty"><p>No upcoming shifts. <a href="/volunteers/" style="color:var(--fnl-cyan)">Browse events</a></p></div>';
+        } else {
+          upcomingList.innerHTML = upcoming.map(h => `
+            <a href="event.html?id=${escapeHtml(h.eventId)}" class="vol-card" style="display:block;text-decoration:none;color:inherit;margin-bottom:0.75rem">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <h3 class="vol-card__title">${escapeHtml(h.eventName)}</h3>
+                  <p class="vol-card__meta">${formatDate(h.eventDate)} &middot; ${escapeHtml(h.roleName)}</p>
+                </div>
+                ${statusBadge(h.status)}
+              </div>
+            </a>
+          `).join('');
+        }
+
+        // History
+        const historyList = document.getElementById('historyList');
+        if (past.length === 0) {
+          historyList.innerHTML = '<div class="vol-empty"><p>No past events yet.</p></div>';
+        } else {
+          historyList.innerHTML = `
+            <table class="vol-table">
+              <thead><tr><th>Event</th><th>Date</th><th>Role</th><th>Status</th><th>Hours</th></tr></thead>
+              <tbody>
+                ${past.map(h => `
+                  <tr>
+                    <td>${escapeHtml(h.eventName)}</td>
+                    <td>${formatDate(h.eventDate)}</td>
+                    <td>${escapeHtml(h.roleName)}</td>
+                    <td>${statusBadge(h.status)}</td>
+                    <td>${h.hoursLogged ?? '–'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+
+        // Profile
+        renderProfile(vol);
+      } catch (err) {
+        document.getElementById('upcomingList').innerHTML = `<div class="vol-empty"><p>Failed to load. ${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function renderProfile(vol) {
+      document.getElementById('profileView').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem">
+          <div><span class="vol-label">Name</span><br>${escapeHtml(vol.firstName)} ${escapeHtml(vol.lastName)}</div>
+          <div><span class="vol-label">Email</span><br>${escapeHtml(vol.email)}</div>
+          <div><span class="vol-label">Phone</span><br>${vol.phone || '–'}</div>
+          <div><span class="vol-label">T-Shirt</span><br>${vol.tshirtSize || '–'}</div>
+          <div><span class="vol-label">Emergency Contact</span><br>${vol.emergencyName || '–'}</div>
+          <div><span class="vol-label">Emergency Phone</span><br>${vol.emergencyPhone || '–'}</div>
+        </div>
+      `;
+    }
+
+    // Edit profile
+    document.getElementById('editProfileBtn').addEventListener('click', () => {
+      const vol = profileData.volunteer;
+      document.getElementById('pFirstName').value = vol.firstName;
+      document.getElementById('pLastName').value = vol.lastName;
+      document.getElementById('pPhone').value = vol.phone || '';
+      document.getElementById('pEmName').value = vol.emergencyName || '';
+      document.getElementById('pEmPhone').value = vol.emergencyPhone || '';
+      document.getElementById('pTshirt').value = vol.tshirtSize || '';
+      document.getElementById('profileView').style.display = 'none';
+      document.getElementById('profileEdit').style.display = 'block';
+      document.getElementById('editProfileBtn').style.display = 'none';
+    });
+
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+      document.getElementById('profileView').style.display = 'block';
+      document.getElementById('profileEdit').style.display = 'none';
+      document.getElementById('editProfileBtn').style.display = 'inline-flex';
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await updateProfile({
+          firstName: document.getElementById('pFirstName').value,
+          lastName: document.getElementById('pLastName').value,
+          phone: document.getElementById('pPhone').value,
+          emergencyName: document.getElementById('pEmName').value,
+          emergencyPhone: document.getElementById('pEmPhone').value,
+          tshirtSize: document.getElementById('pTshirt').value,
+        });
+        showToast('Profile updated!');
+        document.getElementById('profileView').style.display = 'block';
+        document.getElementById('profileEdit').style.display = 'none';
+        document.getElementById('editProfileBtn').style.display = 'inline-flex';
+        loadDashboard();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+
+    loadDashboard();
+  </script>
+</body>
+</html>

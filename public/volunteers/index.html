@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FNL Volunteers</title>
+  <link rel="stylesheet" href="css/volunteers.css">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <!-- Header (shown when logged in) -->
+  <header class="vol-header" id="header" style="display:none">
+    <a href="/volunteers/" class="vol-header__logo">FNL VOLUNTEERS</a>
+    <nav class="vol-header__nav">
+      <a href="/volunteers/dashboard.html" class="vol-header__link">Dashboard</a>
+      <a href="#" class="vol-header__link" id="adminLink" style="display:none">Admin</a>
+      <span class="vol-header__user" id="userName"></span>
+      <button class="vol-btn vol-btn--secondary vol-btn--small" id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <!-- Auth Section (shown when logged out) -->
+  <div id="authSection" class="vol-auth">
+    <h1 class="vol-auth__title" style="color:var(--fnl-cyan)">FNL VOLUNTEERS</h1>
+    <p class="vol-auth__subtitle">The UK's Healthiest Night Out needs you</p>
+
+    <div class="vol-error" id="authError"></div>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="vol-form">
+      <div class="vol-field">
+        <label class="vol-label" for="loginEmail">Email</label>
+        <input class="vol-input" type="email" id="loginEmail" placeholder="you@email.com" required>
+      </div>
+      <div class="vol-field">
+        <label class="vol-label" for="loginPassword">Password</label>
+        <input class="vol-input" type="password" id="loginPassword" placeholder="Your password" required>
+      </div>
+      <button type="submit" class="vol-btn vol-btn--primary vol-btn--full" id="loginBtn">Sign In</button>
+      <p class="vol-auth__toggle"><a id="showForgot" style="color:var(--fnl-light-grey);cursor:pointer">Forgot password?</a></p>
+      <p class="vol-auth__toggle">Don't have an account? <a id="showRegister">Create one</a></p>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgotForm" class="vol-form" style="display:none">
+      <div class="vol-field">
+        <label class="vol-label" for="forgotEmail">Email</label>
+        <input class="vol-input" type="email" id="forgotEmail" placeholder="you@email.com" required>
+      </div>
+      <button type="submit" class="vol-btn vol-btn--primary vol-btn--full" id="forgotBtn">Send Reset Link</button>
+      <p class="vol-auth__toggle"><a id="showLoginFromForgot">Back to sign in</a></p>
+    </form>
+
+    <!-- Reset Password Form (shown when ?reset=TOKEN is in URL) -->
+    <form id="resetForm" class="vol-form" style="display:none">
+      <div class="vol-field">
+        <label class="vol-label" for="resetPassword">New Password</label>
+        <input class="vol-input" type="password" id="resetPassword" placeholder="Min 8 characters" minlength="8" required>
+      </div>
+      <div class="vol-field">
+        <label class="vol-label" for="resetPasswordConfirm">Confirm Password</label>
+        <input class="vol-input" type="password" id="resetPasswordConfirm" placeholder="Confirm password" minlength="8" required>
+      </div>
+      <button type="submit" class="vol-btn vol-btn--primary vol-btn--full" id="resetBtn">Set New Password</button>
+    </form>
+
+    <!-- Success message (shown after forgot/reset) -->
+    <div id="authSuccess" class="vol-card vol-card--highlight" style="display:none;text-align:center;padding:2rem">
+      <p id="authSuccessMsg" style="margin-bottom:1rem"></p>
+      <a id="showLoginFromSuccess" style="color:var(--fnl-cyan);cursor:pointer">Back to sign in</a>
+    </div>
+
+    <!-- Register Form -->
+    <form id="registerForm" class="vol-form" style="display:none">
+      <div class="vol-row">
+        <div class="vol-field">
+          <label class="vol-label" for="regFirstName">First Name *</label>
+          <input class="vol-input" type="text" id="regFirstName" required>
+        </div>
+        <div class="vol-field">
+          <label class="vol-label" for="regLastName">Last Name *</label>
+          <input class="vol-input" type="text" id="regLastName" required>
+        </div>
+      </div>
+      <div class="vol-field">
+        <label class="vol-label" for="regEmail">Email *</label>
+        <input class="vol-input" type="email" id="regEmail" placeholder="you@email.com" required>
+      </div>
+      <div class="vol-field">
+        <label class="vol-label" for="regPassword">Password *</label>
+        <input class="vol-input" type="password" id="regPassword" placeholder="Min 8 characters" minlength="8" required>
+      </div>
+      <div class="vol-field">
+        <label class="vol-label" for="regPhone">Phone</label>
+        <input class="vol-input" type="tel" id="regPhone" placeholder="07xxx xxx xxx">
+      </div>
+      <div class="vol-row">
+        <div class="vol-field">
+          <label class="vol-label" for="regEmergencyName">Emergency Contact</label>
+          <input class="vol-input" type="text" id="regEmergencyName" placeholder="Name">
+        </div>
+        <div class="vol-field">
+          <label class="vol-label" for="regEmergencyPhone">Emergency Phone</label>
+          <input class="vol-input" type="tel" id="regEmergencyPhone" placeholder="07xxx xxx xxx">
+        </div>
+      </div>
+      <div class="vol-field">
+        <label class="vol-label" for="regTshirt">T-Shirt Size</label>
+        <select class="vol-select" id="regTshirt">
+          <option value="">Select size</option>
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+        </select>
+      </div>
+      <button type="submit" class="vol-btn vol-btn--primary vol-btn--full" id="registerBtn">Create Account</button>
+      <p class="vol-auth__toggle">Already have an account? <a id="showLogin">Sign in</a></p>
+    </form>
+  </div>
+
+  <!-- Events Section (shown when logged in) -->
+  <div id="eventsSection" class="vol-container" style="display:none">
+    <div class="vol-section__header">
+      <h2>Upcoming Events</h2>
+    </div>
+    <div class="vol-grid" id="eventsList">
+      <div class="vol-loader"><div class="vol-loader__spinner"></div></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getSession, setToken, logout, isAdmin } from './js/vol-auth.js';
+    import { login, register, getEvents, forgotPassword, resetPassword } from './js/vol-api.js';
+    import { formatDate, formatTime, escapeHtml, showToast } from './js/vol-utils.js';
+
+    const session = getSession();
+
+    // UI elements
+    const header = document.getElementById('header');
+    const authSection = document.getElementById('authSection');
+    const eventsSection = document.getElementById('eventsSection');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const forgotForm = document.getElementById('forgotForm');
+    const resetForm = document.getElementById('resetForm');
+    const authError = document.getElementById('authError');
+    const authSuccess = document.getElementById('authSuccess');
+
+    function showError(msg) {
+      authError.textContent = msg;
+      authError.classList.add('vol-error--visible');
+      authSuccess.style.display = 'none';
+    }
+    function hideError() {
+      authError.classList.remove('vol-error--visible');
+    }
+    function hideAllForms() {
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'none';
+      forgotForm.style.display = 'none';
+      resetForm.style.display = 'none';
+      authSuccess.style.display = 'none';
+      hideError();
+    }
+    function showSuccessMsg(msg) {
+      hideAllForms();
+      document.getElementById('authSuccessMsg').textContent = msg;
+      authSuccess.style.display = 'block';
+    }
+
+    // Check for ?reset=TOKEN in URL (password reset link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('reset');
+    if (resetToken && !session) {
+      hideAllForms();
+      resetForm.style.display = 'flex';
+    }
+
+    // Toggle login / register / forgot
+    document.getElementById('showRegister').addEventListener('click', () => {
+      hideAllForms();
+      registerForm.style.display = 'flex';
+    });
+    document.getElementById('showLogin').addEventListener('click', () => {
+      hideAllForms();
+      loginForm.style.display = 'flex';
+    });
+    document.getElementById('showForgot').addEventListener('click', () => {
+      hideAllForms();
+      forgotForm.style.display = 'flex';
+    });
+    document.getElementById('showLoginFromForgot').addEventListener('click', () => {
+      hideAllForms();
+      loginForm.style.display = 'flex';
+    });
+    document.getElementById('showLoginFromSuccess').addEventListener('click', () => {
+      hideAllForms();
+      loginForm.style.display = 'flex';
+    });
+
+    // Login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      try {
+        const result = await login(
+          document.getElementById('loginEmail').value,
+          document.getElementById('loginPassword').value
+        );
+        if (result) {
+          setToken(result.token);
+          window.location.href = '/volunteers/dashboard.html';
+        }
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+
+    // Register
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      try {
+        const result = await register({
+          email: document.getElementById('regEmail').value,
+          password: document.getElementById('regPassword').value,
+          firstName: document.getElementById('regFirstName').value,
+          lastName: document.getElementById('regLastName').value,
+          phone: document.getElementById('regPhone').value,
+          emergencyName: document.getElementById('regEmergencyName').value,
+          emergencyPhone: document.getElementById('regEmergencyPhone').value,
+          tshirtSize: document.getElementById('regTshirt').value,
+        });
+        if (result) {
+          setToken(result.token);
+          window.location.href = '/volunteers/dashboard.html';
+        }
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+
+    // Forgot password
+    forgotForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      const btn = document.getElementById('forgotBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        await forgotPassword(document.getElementById('forgotEmail').value);
+        showSuccessMsg('If that email exists, a reset link has been sent. Check your inbox.');
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Link';
+      }
+    });
+
+    // Reset password (from email link)
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+      const pw = document.getElementById('resetPassword').value;
+      const pw2 = document.getElementById('resetPasswordConfirm').value;
+      if (pw !== pw2) {
+        showError('Passwords do not match');
+        return;
+      }
+      const btn = document.getElementById('resetBtn');
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+      try {
+        await resetPassword(resetToken, pw);
+        // Clear the token from URL
+        window.history.replaceState({}, '', '/volunteers/');
+        showSuccessMsg('Password updated! You can now sign in with your new password.');
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Set New Password';
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // If logged in, show events
+    if (session) {
+      authSection.style.display = 'none';
+      header.style.display = 'flex';
+      eventsSection.style.display = 'block';
+      document.getElementById('userName').textContent = session.firstName;
+
+      if (isAdmin()) {
+        const adminLink = document.getElementById('adminLink');
+        adminLink.style.display = 'inline';
+        adminLink.href = '/volunteers/admin.html';
+      }
+
+      loadEvents();
+    }
+
+    async function loadEvents() {
+      const list = document.getElementById('eventsList');
+      try {
+        const data = await getEvents();
+        if (!data || !data.events || data.events.length === 0) {
+          list.innerHTML = '<div class="vol-empty"><p>No upcoming events yet. Check back soon!</p></div>';
+          return;
+        }
+        list.innerHTML = data.events
+          .filter(ev => ev.status === 'open' || ev.status === 'active')
+          .map(ev => {
+            const roleCount = ev.roles ? ev.roles.length : 0;
+            const totalSlots = ev.roles ? ev.roles.reduce((s, r) => s + (r.maxSlots || 0), 0) : 0;
+            return `
+              <a href="event.html?id=${escapeHtml(ev.id)}" class="vol-card" style="text-decoration:none;color:inherit">
+                <h3 class="vol-card__title">${escapeHtml(ev.name)}</h3>
+                <p class="vol-card__meta">${formatDate(ev.date)} &middot; ${escapeHtml(ev.location)}</p>
+                <p class="vol-card__meta">${roleCount} roles &middot; ${totalSlots} volunteer spots</p>
+                <span class="vol-badge" style="--badge-color: var(--fnl-cyan)">${ev.status === 'active' ? 'Event Day' : 'Open'}</span>
+              </a>
+            `;
+          }).join('');
+      } catch (err) {
+        list.innerHTML = `<div class="vol-empty"><p>Failed to load events. ${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+  </script>
+</body>
+</html>

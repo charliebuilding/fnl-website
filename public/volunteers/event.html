@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event — FNL Volunteers</title>
+  <link rel="stylesheet" href="css/volunteers.css">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <header class="vol-header">
+    <a href="/volunteers/" class="vol-header__logo">FNL VOLUNTEERS</a>
+    <nav class="vol-header__nav">
+      <a href="/volunteers/dashboard.html" class="vol-header__link">Dashboard</a>
+      <a href="#" class="vol-header__link" id="adminLink" style="display:none">Admin</a>
+      <span class="vol-header__user" id="userName"></span>
+      <button class="vol-btn vol-btn--secondary vol-btn--small" id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <div class="vol-container">
+    <div id="content">
+      <div class="vol-loader"><div class="vol-loader__spinner"></div></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, isAdmin, logout, getSession } from './js/vol-auth.js';
+    import { getEvent, signUp, cancelSignup, changeRole } from './js/vol-api.js';
+    import { formatDate, formatTime, escapeHtml, showToast, roleCategory, statusBadge } from './js/vol-utils.js';
+
+    const session = requireAuth();
+    if (!session) throw new Error('Not authenticated');
+
+    document.getElementById('userName').textContent = session.firstName;
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    if (isAdmin()) {
+      const link = document.getElementById('adminLink');
+      link.style.display = 'inline';
+      link.href = '/volunteers/admin.html';
+    }
+
+    const eventId = new URLSearchParams(window.location.search).get('id');
+    if (!eventId) {
+      document.getElementById('content').innerHTML = '<div class="vol-empty"><p>No event specified.</p></div>';
+      throw new Error('No event ID');
+    }
+
+    let currentEvent = null;
+    let currentSignup = null;
+
+    async function loadEvent() {
+      const content = document.getElementById('content');
+      try {
+        const data = await getEvent(eventId);
+        currentEvent = data.event;
+        const ev = currentEvent;
+        const roleCounts = ev.roleCounts || {};
+
+        // Check if user has an existing signup
+        // We detect this from the event data by checking signups
+        const profileRes = await fetch('/api/volunteers/profile', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('fnl_vol_session')}` }
+        });
+        const profileData = await profileRes.json();
+        const mySignup = profileData.history?.find(h => h.eventId === eventId && h.status !== 'cancelled' && h.status !== 'declined');
+        currentSignup = mySignup || null;
+
+        content.innerHTML = `
+          <a href="/volunteers/" style="color:var(--fnl-cyan);text-decoration:none;font-size:0.85rem;display:inline-block;margin-bottom:1rem">&larr; Back to events</a>
+          <h1>${escapeHtml(ev.name)}</h1>
+          <p class="subtitle" style="margin-bottom:0.5rem">${formatDate(ev.date)} ${ev.time ? '&middot; ' + formatTime(ev.time) : ''}</p>
+          <p class="subtitle" style="margin-bottom:1.5rem">${escapeHtml(ev.location)}</p>
+
+          ${ev.briefingTime ? `
+            <div class="vol-card vol-card--highlight" style="margin-bottom:1.5rem">
+              <strong>Volunteer Briefing:</strong> ${formatTime(ev.briefingTime)} ${ev.briefingLocation ? 'at ' + escapeHtml(ev.briefingLocation) : ''}
+            </div>
+          ` : ''}
+
+          ${currentSignup ? `
+            <div class="vol-card" style="margin-bottom:1.5rem;border-color:var(--fnl-cyan)">
+              <p style="margin-bottom:0.5rem"><strong>You're signed up!</strong></p>
+              <p>Role: <strong>${escapeHtml(currentSignup.roleName)}</strong> ${statusBadge(currentSignup.status)}</p>
+              <div style="margin-top:1rem;display:flex;gap:0.75rem">
+                <button class="vol-btn vol-btn--danger vol-btn--small" id="cancelBtn">Cancel Signup</button>
+              </div>
+            </div>
+          ` : ''}
+
+          <h2 style="margin-bottom:1rem">Available Roles</h2>
+          <div class="vol-grid" id="rolesList">
+            ${(ev.roles || []).map(role => {
+              const filled = roleCounts[role.id] || 0;
+              const available = role.maxSlots - filled;
+              const isFull = available <= 0;
+              const isMyRole = currentSignup?.roleName === role.name;
+              const color = roleCategory(role.category);
+              return `
+                <div class="vol-card ${isMyRole ? 'vol-card--highlight' : ''}" style="position:relative">
+                  <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+                    <span class="vol-role-chip" style="--role-color:${color}">
+                      <span class="vol-role-chip__dot"></span>
+                      ${escapeHtml(role.category)}
+                    </span>
+                    ${isMyRole ? '<span style="color:var(--fnl-cyan);font-size:0.8rem;font-weight:600">YOUR ROLE</span>' : ''}
+                  </div>
+                  <h3 class="vol-card__title">${escapeHtml(role.name)}</h3>
+                  ${role.description ? `<p class="vol-card__meta">${escapeHtml(role.description)}</p>` : ''}
+                  <p class="vol-card__meta">
+                    ${role.shiftStart ? formatTime(role.shiftStart) + ' – ' + formatTime(role.shiftEnd) : 'Time TBC'}
+                    &middot; ${available}/${role.maxSlots} spots left
+                  </p>
+                  ${role.requiresSkill ? `<p class="vol-card__meta" style="color:var(--fnl-yellow)">Requires: ${escapeHtml(role.requiresSkill)}</p>` : ''}
+                  ${!currentSignup && !isFull ? `
+                    <button class="vol-btn vol-btn--primary vol-btn--small signup-btn" data-role-id="${escapeHtml(role.id)}" style="margin-top:0.75rem">Sign Up</button>
+                  ` : ''}
+                  ${currentSignup && !isMyRole && !isFull ? `
+                    <button class="vol-btn vol-btn--secondary vol-btn--small switch-btn" data-role-id="${escapeHtml(role.id)}" style="margin-top:0.75rem">Switch to this role</button>
+                  ` : ''}
+                  ${isFull && !isMyRole ? '<p style="color:var(--fnl-magenta);font-size:0.85rem;margin-top:0.75rem;font-weight:600">FULL</p>' : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+
+        // Bind signup buttons
+        content.querySelectorAll('.signup-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = 'Signing up...';
+            try {
+              await signUp(eventId, btn.dataset.roleId);
+              showToast('Signed up successfully!');
+              loadEvent();
+            } catch (err) {
+              showToast(err.message, 'error');
+              btn.disabled = false;
+              btn.textContent = 'Sign Up';
+            }
+          });
+        });
+
+        // Bind switch buttons
+        content.querySelectorAll('.switch-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = 'Switching...';
+            try {
+              await changeRole(eventId, btn.dataset.roleId);
+              showToast('Role changed!');
+              loadEvent();
+            } catch (err) {
+              showToast(err.message, 'error');
+              btn.disabled = false;
+              btn.textContent = 'Switch to this role';
+            }
+          });
+        });
+
+        // Bind cancel
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to cancel your signup?')) return;
+            cancelBtn.disabled = true;
+            try {
+              await cancelSignup(eventId);
+              showToast('Signup cancelled');
+              loadEvent();
+            } catch (err) {
+              showToast(err.message, 'error');
+              cancelBtn.disabled = false;
+            }
+          });
+        }
+      } catch (err) {
+        content.innerHTML = `<div class="vol-empty"><p>Failed to load event. ${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    loadEvent();
+  </script>
+</body>
+</html>

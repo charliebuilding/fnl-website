@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check-in — FNL Volunteers</title>
+  <link rel="stylesheet" href="css/volunteers.css">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    .checkin-counter {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .checkin-counter span { color: var(--fnl-cyan); }
+    .sync-status {
+      text-align: center;
+      font-size: 0.8rem;
+      padding: 0.4rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .sync-status--ok { color: var(--fnl-cyan); }
+    .sync-status--pending { color: var(--fnl-yellow); background: rgba(255,255,0,0.1); }
+    .role-group { margin-bottom: 1.5rem; }
+    .role-group__header {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-left: 3px solid var(--role-color, var(--fnl-cyan));
+      margin-bottom: 0.5rem;
+      color: var(--fnl-light-grey);
+    }
+  </style>
+</head>
+<body>
+  <header class="vol-header">
+    <a href="/volunteers/admin.html" class="vol-header__logo">&larr; ADMIN</a>
+    <nav class="vol-header__nav">
+      <span class="vol-header__user" id="eventName"></span>
+    </nav>
+  </header>
+
+  <div class="vol-container">
+    <div id="content">
+      <div class="vol-loader"><div class="vol-loader__spinner"></div></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAdmin } from './js/vol-auth.js';
+    import { escapeHtml, showToast, roleCategory } from './js/vol-utils.js';
+
+    const session = requireAdmin();
+    if (!session) throw new Error('Not admin');
+
+    const eventId = new URLSearchParams(window.location.search).get('id');
+    if (!eventId) {
+      document.getElementById('content').innerHTML = '<div class="vol-empty"><p>No event specified.</p></div>';
+      throw new Error('No event ID');
+    }
+
+    const token = localStorage.getItem('fnl_vol_session');
+    let signups = [];
+    let eventData = null;
+    let pendingCheckins = JSON.parse(localStorage.getItem(`checkin_pending_${eventId}`) || '[]');
+
+    async function loadData() {
+      const content = document.getElementById('content');
+      try {
+        // Load event + signups in parallel
+        const [eventRes, signupsRes] = await Promise.all([
+          fetch(`/api/volunteers/events?id=${eventId}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`/api/volunteers/admin?action=signups&eventId=${eventId}`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+
+        const eventJson = await eventRes.json();
+        const signupsJson = await signupsRes.json();
+
+        eventData = eventJson.event;
+        signups = (signupsJson.signups || []).filter(s => s.status === 'confirmed' || s.status === 'pending');
+
+        // Apply any pending local check-ins
+        pendingCheckins.forEach(volId => {
+          const s = signups.find(s => s.volunteerId === volId);
+          if (s) s.checkedIn = true;
+        });
+
+        document.getElementById('eventName').textContent = eventData.name;
+        render();
+      } catch (err) {
+        content.innerHTML = `<div class="vol-empty"><p>Failed to load. ${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function render() {
+      const content = document.getElementById('content');
+      const checked = signups.filter(s => s.checkedIn).length;
+      const total = signups.length;
+
+      // Group by role
+      const roleMap = {};
+      (eventData.roles || []).forEach(r => {
+        roleMap[r.id] = { ...r, signups: [] };
+      });
+      signups.forEach(s => {
+        if (roleMap[s.roleId]) {
+          roleMap[s.roleId].signups.push(s);
+        }
+      });
+
+      content.innerHTML = `
+        <div class="checkin-counter"><span>${checked}</span> / ${total}</div>
+        <div class="sync-status ${pendingCheckins.length > 0 ? 'sync-status--pending' : 'sync-status--ok'}" id="syncStatus">
+          ${pendingCheckins.length > 0 ? `${pendingCheckins.length} pending sync...` : 'All synced'}
+        </div>
+
+        <div class="vol-search">
+          <span class="vol-search__icon">&#128269;</span>
+          <input class="vol-search__input" id="searchInput" placeholder="Search volunteer name..." autofocus>
+        </div>
+
+        <div id="checkinList">
+          ${Object.values(roleMap).map(role => {
+            const color = roleCategory(role.category);
+            if (role.signups.length === 0) return '';
+            return `
+              <div class="role-group">
+                <div class="role-group__header" style="--role-color:${color}">${escapeHtml(role.name)} (${role.signups.filter(s => s.checkedIn).length}/${role.signups.length})</div>
+                ${role.signups
+                  .sort((a, b) => (a.checkedIn === b.checkedIn ? 0 : a.checkedIn ? 1 : -1))
+                  .map(s => `
+                    <div class="vol-checkin-item ${s.checkedIn ? 'vol-checkin-item--checked' : ''}" data-volunteer-id="${s.volunteerId}" data-name="${escapeHtml(s.volunteerName.toLowerCase())}">
+                      <div>
+                        <strong>${escapeHtml(s.volunteerName)}</strong>
+                        <div style="font-size:0.8rem;color:var(--fnl-light-grey)">${escapeHtml(s.volunteerEmail)}</div>
+                      </div>
+                      <div class="vol-checkin-item__check">
+                        ${s.checkedIn ? '&#10003;' : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      // Bind check-in clicks
+      content.querySelectorAll('.vol-checkin-item:not(.vol-checkin-item--checked)').forEach(item => {
+        item.addEventListener('click', () => handleCheckin(item.dataset.volunteerId));
+      });
+
+      // Search filter
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        content.querySelectorAll('.vol-checkin-item').forEach(item => {
+          item.style.display = item.dataset.name.includes(q) ? 'flex' : 'none';
+        });
+      });
+    }
+
+    async function handleCheckin(volunteerId) {
+      // Optimistic UI update
+      const signup = signups.find(s => s.volunteerId === volunteerId);
+      if (!signup || signup.checkedIn) return;
+      signup.checkedIn = true;
+      render();
+
+      try {
+        const res = await fetch('/api/volunteers/checkin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ eventId, volunteerId }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          if (res.status !== 409) { // 409 = already checked in, that's fine
+            throw new Error(data.error);
+          }
+        }
+
+        // Remove from pending if it was there
+        pendingCheckins = pendingCheckins.filter(id => id !== volunteerId);
+        localStorage.setItem(`checkin_pending_${eventId}`, JSON.stringify(pendingCheckins));
+        showToast(`${signup.volunteerName} checked in!`);
+      } catch (err) {
+        // Network error — queue for later
+        if (!pendingCheckins.includes(volunteerId)) {
+          pendingCheckins.push(volunteerId);
+          localStorage.setItem(`checkin_pending_${eventId}`, JSON.stringify(pendingCheckins));
+        }
+        showToast('Saved offline — will sync when connected', 'error');
+      }
+
+      render();
+    }
+
+    // Retry pending check-ins every 30 seconds
+    setInterval(async () => {
+      if (pendingCheckins.length === 0) return;
+
+      const toRetry = [...pendingCheckins];
+      for (const volunteerId of toRetry) {
+        try {
+          const res = await fetch('/api/volunteers/checkin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ eventId, volunteerId }),
+          });
+          if (res.ok || res.status === 409) {
+            pendingCheckins = pendingCheckins.filter(id => id !== volunteerId);
+            localStorage.setItem(`checkin_pending_${eventId}`, JSON.stringify(pendingCheckins));
+          }
+        } catch {
+          break; // Still offline, stop retrying
+        }
+      }
+      if (toRetry.length !== pendingCheckins.length) {
+        render();
+      }
+    }, 30000);
+
+    loadData();
+  </script>
+</body>
+</html>
